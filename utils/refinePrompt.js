@@ -159,6 +159,15 @@ function cleanPong(pong, ping) {
     return cleaned; // Return clarifying questions without further processing
   }
   
+  // Check if refined pong is functionally identical to ping (after normalization)
+  const normalizedPing = ping.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  const normalizedPong = cleaned.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  
+  if (normalizedPong === normalizedPing) {
+    // Input may already be clear, suggest adding context
+    return "Your input may already be clear. Can you add more context?\nFor example: type of places (restaurants, parks), preferences (family-friendly, budget)?";
+  }
+  
   // Ensure the cleaned result isn't empty
   if (!cleaned || cleaned.length === 0) {
     cleaned = ping; // Fallback to original if cleaning resulted in empty string

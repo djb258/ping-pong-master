@@ -22,14 +22,25 @@ async function callActualAbacusAPI(prompt) {
   if (apiKey && apiKey !== 'your_abacus_api_key_here') {
     try {
       // Actual Abacus API integration
-      // Wrap user's prompt with meaningful refinement instruction
-      const refinementInstruction = `Please either:
-1️⃣ Rewrite the prompt to improve clarity, specificity, or directness, 
-OR
-2️⃣ Ask the user clarifying questions that would help improve the prompt.
-Return only the rewritten prompt or clarifying questions.
+      // System prompt for Abacus AI Prompt Refiner
+      const systemPrompt = `You are an expert AI Prompt Refiner.
 
-Original prompt: "${prompt}"`;
+Your job is to take the user's raw prompt and improve it. You MUST do one of the following:
+
+1. Rewrite the prompt to be clearer, more specific, or more actionable.
+2. Add relevant clarifying context to help a downstream LLM give a better response.
+3. If you cannot refine it without more info, ask the user **specific clarifying questions** to improve the prompt.
+
+DO NOT return the original prompt unchanged.
+DO NOT just restate what the user said.
+DO NOT respond with "refinement not applied."
+
+Your output should be only:
+- A rewritten prompt if you're confident
+- OR a list of questions to ask the user for more detail.`;
+
+      // User prompt to refine
+      const userPrompt = `Please refine this prompt: "${prompt}"`;
 
        const response = await fetch(apiUrl, {
          method: 'POST',
@@ -39,7 +50,10 @@ Original prompt: "${prompt}"`;
            ...(orgId && { 'X-Organization-ID': orgId }),
          },
          body: JSON.stringify({
-           prompt: refinementInstruction,
+           messages: [
+             { role: 'system', content: systemPrompt },
+             { role: 'user', content: userPrompt }
+           ],
            model: process.env.ABACUS_MODEL || 'abacus-default',
            max_tokens: parseInt(process.env.ABACUS_MAX_TOKENS) || 4000,
            temperature: parseFloat(process.env.ABACUS_TEMPERATURE) || 0.7,

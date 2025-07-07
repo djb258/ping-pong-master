@@ -22,21 +22,26 @@ async function callActualAbacusAPI(prompt) {
   if (apiKey && apiKey !== 'your_abacus_api_key_here') {
     try {
       // Actual Abacus API integration
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-          ...(orgId && { 'X-Organization-ID': orgId }),
-        },
-        body: JSON.stringify({
-          prompt,
-          model: process.env.ABACUS_MODEL || 'abacus-default',
-          max_tokens: parseInt(process.env.ABACUS_MAX_TOKENS) || 4000,
-          temperature: parseFloat(process.env.ABACUS_TEMPERATURE) || 0.7,
-        }),
-        timeout: parseInt(process.env.REQUEST_TIMEOUT_MS) || 30000,
-      });
+             // Wrap user's prompt with focused refinement instruction
+       const refinementInstruction = `Please rewrite the following prompt to improve clarity, specificity, and intent without adding unnecessary instructions or filler. Return only the refined prompt text in plain English without additional notes or lists.
+
+Original prompt: "${prompt}"`;
+
+       const response = await fetch(apiUrl, {
+         method: 'POST',
+         headers: {
+           'Authorization': `Bearer ${apiKey}`,
+           'Content-Type': 'application/json',
+           ...(orgId && { 'X-Organization-ID': orgId }),
+         },
+         body: JSON.stringify({
+           prompt: refinementInstruction,
+           model: process.env.ABACUS_MODEL || 'abacus-default',
+           max_tokens: parseInt(process.env.ABACUS_MAX_TOKENS) || 4000,
+           temperature: parseFloat(process.env.ABACUS_TEMPERATURE) || 0.7,
+         }),
+         timeout: parseInt(process.env.REQUEST_TIMEOUT_MS) || 30000,
+       });
 
       if (!response.ok) {
         throw new Error(`Abacus API error: ${response.status} ${response.statusText}`);
@@ -58,26 +63,26 @@ async function callActualAbacusAPI(prompt) {
 }
 
 /**
- * Generate a clearer, more specific version of the input prompt
- * Focus only on improving clarity and specificity, not adding generic structure
+ * Generate a clearer, more specific version of the input prompt for fallback
+ * Focus only on improving clarity and specificity, not adding generic phrases
  */
 function generateClearerPrompt(originalPrompt) {
   // Simple refinements that improve clarity without adding boilerplate
   const clarityImprovements = [
     // Make vague terms more specific
-    { from: /\bthing\b/gi, to: 'specific element' },
-    { from: /\bstuff\b/gi, to: 'specific items' },
+    { from: /\bthing\b/gi, to: 'element' },
+    { from: /\bstuff\b/gi, to: 'items' },
     { from: /\bgood\b/gi, to: 'effective' },
     { from: /\bbad\b/gi, to: 'ineffective' },
     
     // Improve question clarity
-    { from: /^how do i\s+/i, to: 'What is the specific process to ' },
-    { from: /^what is\s+/i, to: 'Please define ' },
-    { from: /^tell me about\s+/i, to: 'Please explain ' },
+    { from: /^how do i\s+/i, to: 'How can I ' },
+    { from: /^what is\s+/i, to: 'Define ' },
+    { from: /^tell me about\s+/i, to: 'Explain ' },
     
     // Add specificity to common requests
-    { from: /\bhelp me\b/gi, to: 'provide guidance on' },
-    { from: /\bshow me\b/gi, to: 'demonstrate' },
+    { from: /\bhelp me\b/gi, to: 'guide me in' },
+    { from: /\bshow me\b/gi, to: 'demonstrate how to' },
   ];
   
   let refined = originalPrompt.trim();
@@ -86,12 +91,6 @@ function generateClearerPrompt(originalPrompt) {
   clarityImprovements.forEach(improvement => {
     refined = refined.replace(improvement.from, improvement.to);
   });
-  
-  // If the prompt is very short (< 10 words), add minimal context request
-  const wordCount = refined.split(/\s+/).length;
-  if (wordCount < 10 && !refined.includes('?')) {
-    refined += '. Please be specific in your response.';
-  }
   
   // Ensure proper sentence structure
   if (!refined.endsWith('.') && !refined.endsWith('?') && !refined.endsWith('!')) {

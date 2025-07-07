@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   try {
     console.log('=== ABACUS API TEST START ===');
     
-    const apiKey = process.env.ABACUS_API_KEY || 's2_ad901b7e536d47769353c72f146d994b';
+    const apiKey = process.env.ABACUS_API_KEY || 's2_aeab62dee4c048108be2221161b51a21';
     console.log('API Key found:', !!apiKey);
     console.log('API Key preview:', apiKey ? `${apiKey.substring(0, 10)}...` : 'NOT FOUND');
 

@@ -9,24 +9,6 @@
  */
 
 /**
- * Refined system prompt for better prompt engineering
- */
-const SYSTEM_PROMPT = `You are an Expert Prompt Refiner. Given a user's input prompt, you must choose exactly ONE of these three actions:
-
-1. REWRITE: If the prompt is unclear, vague, or could be improved, rewrite it to be more clear, specific, and effective. Make it actionable and well-structured.
-
-2. ENHANCE: If the prompt is decent but could benefit from additional context, constraints, or formatting, enhance it by adding useful elements like examples, specific requirements, or better structure.
-
-3. CLARIFY: If the prompt is ambiguous or you need more information to provide the best refinement, ask exactly 3 specific, targeted questions that would help you understand what the user really wants.
-
-CRITICAL RULES:
-- NEVER repeat the original prompt as-is
-- NEVER just say "your input may be clear" or similar dismissive responses
-- ALWAYS provide substantial improvement or ask specific questions
-- Be direct and actionable in your response
-- Focus on making prompts more effective for AI systems`;
-
-/**
  * Main function to refine prompts using Abacus.AI
  * @param {string} userPrompt - The original prompt to refine
  * @returns {Promise<string>} - The refined prompt
@@ -35,125 +17,43 @@ export async function refinePrompt(userPrompt) {
   try {
     console.log('refinePrompt called with:', userPrompt);
     
-    // Check for API key
-    const apiKey = process.env.ABACUS_API_KEY || 's2_ad901b7e536d47769353c72f146d994b';
-    if (!apiKey) {
-      console.error('No Abacus API key found');
-      throw new Error('No API key configured');
-    }
-
-    console.log('Using API key:', apiKey.substring(0, 10) + '...');
-
-    // Based on the Abacus.AI documentation, they use evaluate_prompt
-    // Example from their docs: ApiClient().evaluate_prompt(prompt=nlp_query, system_message=f'respond like {character}').content
-    const requestBody = {
-      prompt: userPrompt,
-      system_message: SYSTEM_PROMPT,
-      max_tokens: 1000,
-      temperature: 0.7
-    };
-
-    console.log('Request body:', JSON.stringify(requestBody, null, 2));
-
-    // Use the correct evaluate_prompt endpoint
-    const response = await fetch('https://api.abacus.ai/api/v0/evaluatePrompt', {
+    // Call our API endpoint that handles the server-side Abacus.AI integration
+    const response = await fetch('/api/refine-prompt', {
       method: 'POST',
       headers: {
-        'apiKey': apiKey,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify({ prompt: userPrompt })
     });
 
-    console.log('Response status:', response.status);
-    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+    console.log('API response status:', response.status);
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('API Error Response:', errorText);
+      const errorData = await response.json();
+      console.error('API Error:', errorData);
       
-      // If this endpoint doesn't work, try a fallback approach
-      return await tryAlternativeApproach(userPrompt, apiKey);
+      // If there's a fallback provided, use it
+      if (errorData.fallback) {
+        return errorData.fallback;
+      }
+      
+      // Otherwise generate our own fallback
+      return generateFallbackResponse(userPrompt);
     }
 
     const data = await response.json();
     console.log('API Response:', data);
 
-    // Check for different possible response formats
-    if (data.content) {
-      return data.content;
-    } else if (data.result && data.result.content) {
-      return data.result.content;
-    } else if (data.response) {
-      return data.response;
-    } else if (typeof data === 'string') {
-      return data;
+    if (data.success && data.refined_prompt) {
+      return data.refined_prompt;
+    } else if (data.fallback) {
+      return data.fallback;
     } else {
       console.error('Unexpected response format:', data);
-      return await tryAlternativeApproach(userPrompt, apiKey);
+      return generateFallbackResponse(userPrompt);
     }
   } catch (error) {
     console.error('Error in refinePrompt:', error);
-    return await tryAlternativeApproach(userPrompt, apiKey);
-  }
-}
-
-/**
- * Try alternative API approaches if the main one fails
- */
-async function tryAlternativeApproach(userPrompt, apiKey) {
-  try {
-    // Try different endpoint structures based on the API documentation
-    const endpoints = [
-      'https://api.abacus.ai/api/v0/nlpChatResponse',
-      'https://api.abacus.ai/api/v0/chatCompletion',
-      'https://api.abacus.ai/api/v0/generateText'
-    ];
-
-    for (const endpoint of endpoints) {
-      try {
-        console.log(`Trying endpoint: ${endpoint}`);
-        
-        const requestBody = {
-          messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
-            { role: 'user', content: userPrompt }
-          ],
-          max_tokens: 1000,
-          temperature: 0.7
-        };
-
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'apiKey': apiKey,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(requestBody)
-        });
-
-        console.log(`${endpoint} response status:`, response.status);
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log(`${endpoint} response:`, data);
-          
-          if (data.success && data.content) {
-            return data.content;
-          } else if (data.result && data.result.content) {
-            return data.result.content;
-          }
-        }
-      } catch (endpointError) {
-        console.error(`Error with ${endpoint}:`, endpointError);
-        continue;
-      }
-    }
-
-    // If all endpoints fail, return a fallback response
-    return generateFallbackResponse(userPrompt);
-  } catch (error) {
-    console.error('Error in alternative approach:', error);
     return generateFallbackResponse(userPrompt);
   }
 }
@@ -198,7 +98,7 @@ Structure your response in a clear, organized manner that's easy to follow.`;
 
 Original: "${prompt}"
 
-Refined: "${prompt} Please provide a comprehensive, well-structured response with specific examples and actionable insights. Include relevant context and organize your answer clearly."`;
+Refined: Please provide a comprehensive and detailed response to "${prompt}". Include specific examples, practical applications, and actionable insights. Structure your response clearly with headings or bullet points for easy reading.`;
 }
 
 /**

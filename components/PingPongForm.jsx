@@ -24,6 +24,7 @@ export default function PingPongForm() {
   const [currentPong, setCurrentPong] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [pingPongHistory, setPingPongHistory] = useState([]);
+  const [isClarifyingQuestion, setIsClarifyingQuestion] = useState(false);
 
   /**
    * Handle ping submission and pong generation
@@ -38,9 +39,17 @@ export default function PingPongForm() {
 
     setIsProcessing(true);
     setCurrentPong(''); // Clear previous pong
+    setIsClarifyingQuestion(false);
 
     try {
       const result = await refinePrompt(pingInput, LLMProviders.ABACUS);
+      
+      // Check if the response is a clarifying question
+      const isQuestion = result.refinedPrompt.toLowerCase().includes('clarifying') || 
+                        result.refinedPrompt.toLowerCase().includes('question') ||
+                        result.refinedPrompt.includes('?') && (result.refinedPrompt.includes('what') || result.refinedPrompt.includes('how') || result.refinedPrompt.includes('which') || result.refinedPrompt.includes('when') || result.refinedPrompt.includes('where') || result.refinedPrompt.includes('why'));
+      
+      setIsClarifyingQuestion(isQuestion);
       
       // Update current pong display
       setCurrentPong(result.refinedPrompt);
@@ -53,7 +62,11 @@ export default function PingPongForm() {
       );
 
       setPingPongHistory(prev => [...prev, exportEntry]);
-      setPingInput(''); // Clear input after successful submission
+      
+      // Only clear input if it's not a clarifying question (allow user to respond)
+      if (!isQuestion) {
+        setPingInput(''); // Clear input after successful submission
+      }
       
     } catch (error) {
       console.error('Error processing ping:', error);
@@ -132,25 +145,99 @@ export default function PingPongForm() {
             cursor: isProcessing || !pingInput.trim() ? 'not-allowed' : 'pointer'
           }}
         >
-          {isProcessing ? 'Processing...' : 'Submit'}
+          {isProcessing ? 'Processing...' : (isClarifyingQuestion ? 'Respond to Question' : 'Submit')}
         </button>
       </form>
 
-      {/* Pong display */}
+      {/* Conversation thread display */}
+      {pingPongHistory.length > 0 && (
+        <div style={{ marginBottom: '20px' }}>
+          <h3 style={{ marginBottom: '15px', color: '#333' }}>Conversation Thread:</h3>
+          <div style={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid #e9ecef', borderRadius: '4px' }}>
+            {pingPongHistory.map((entry, index) => {
+              const isQuestion = entry.pong.toLowerCase().includes('clarifying') || 
+                                entry.pong.toLowerCase().includes('question') ||
+                                entry.pong.includes('?') && (entry.pong.includes('what') || entry.pong.includes('how') || entry.pong.includes('which') || entry.pong.includes('when') || entry.pong.includes('where') || entry.pong.includes('why'));
+              
+              return (
+                <div key={index} style={{ 
+                  padding: '15px', 
+                  borderBottom: index < pingPongHistory.length - 1 ? '1px solid #e9ecef' : 'none',
+                  backgroundColor: index % 2 === 0 ? '#f8f9fa' : '#ffffff'
+                }}>
+                  {/* Ping */}
+                  <div style={{ marginBottom: '10px' }}>
+                    <div style={{ 
+                      fontWeight: 'bold', 
+                      color: '#007bff', 
+                      fontSize: '14px',
+                      marginBottom: '5px'
+                    }}>
+                      Ping #{index + 1}:
+                    </div>
+                    <div style={{ 
+                      padding: '10px', 
+                      backgroundColor: '#e3f2fd', 
+                      borderRadius: '4px',
+                      borderLeft: '3px solid #007bff'
+                    }}>
+                      {entry.ping}
+                    </div>
+                  </div>
+                  
+                  {/* Pong */}
+                  <div>
+                    <div style={{ 
+                      fontWeight: 'bold', 
+                      color: isQuestion ? '#ff9800' : '#28a745', 
+                      fontSize: '14px',
+                      marginBottom: '5px'
+                    }}>
+                      {isQuestion ? 'Clarifying Questions:' : 'Refined Prompt:'}
+                    </div>
+                    <div style={{ 
+                      padding: '10px', 
+                      backgroundColor: isQuestion ? '#fff3cd' : '#f1f8e9', 
+                      borderRadius: '4px',
+                      borderLeft: `3px solid ${isQuestion ? '#ff9800' : '#28a745'}`,
+                      whiteSpace: 'pre-wrap'
+                    }}>
+                      {entry.pong}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Current pong display (for immediate feedback) */}
       {currentPong && (
         <div style={{ marginBottom: '20px' }}>
           <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-            Pong:
+            {isClarifyingQuestion ? 'Latest Clarifying Questions:' : 'Latest Response:'}
           </label>
           <div style={{
             padding: '15px',
-            backgroundColor: '#f8f9fa',
+            backgroundColor: isClarifyingQuestion ? '#fff3cd' : '#f8f9fa',
             border: '1px solid #e9ecef',
             borderRadius: '4px',
-            whiteSpace: 'pre-wrap'
+            whiteSpace: 'pre-wrap',
+            borderLeft: isClarifyingQuestion ? '4px solid #ffc107' : '1px solid #e9ecef'
           }}>
             {currentPong}
           </div>
+          {isClarifyingQuestion && (
+            <div style={{ 
+              marginTop: '10px', 
+              fontSize: '14px', 
+              color: '#6c757d',
+              fontStyle: 'italic'
+            }}>
+              Please provide more details in your response above to help refine your prompt.
+            </div>
+          )}
         </div>
       )}
 

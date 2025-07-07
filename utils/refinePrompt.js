@@ -149,14 +149,14 @@ function cleanPong(pong, ping) {
   // Clean up extra whitespace
   cleaned = cleaned.replace(/\s+/g, ' ').trim();
   
-  // Check if refined pong is functionally identical to ping
-  // Compare normalized versions (alphanumeric only, lowercase)
-  const normalizedPing = ping.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-  const normalizedPong = cleaned.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  // Check if the response contains clarifying questions
+  const hasClarifyingQuestions = cleaned.toLowerCase().includes('clarifying') || 
+                                cleaned.toLowerCase().includes('question') ||
+                                cleaned.includes('?') && (cleaned.includes('what') || cleaned.includes('how') || cleaned.includes('which') || cleaned.includes('when') || cleaned.includes('where') || cleaned.includes('why'));
   
-  if (normalizedPong === normalizedPing) {
-    // Refinement not applied; input may already be clear
-    cleaned = "Refinement not applied; input may already be clear.";
+  // If it's a clarifying question, preserve it as-is
+  if (hasClarifyingQuestions) {
+    return cleaned; // Return clarifying questions without further processing
   }
   
   // Ensure the cleaned result isn't empty

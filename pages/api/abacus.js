@@ -23,7 +23,11 @@ async function callActualAbacusAPI(prompt) {
     try {
       // Actual Abacus API integration
       // Wrap user's prompt with meaningful refinement instruction
-      const refinementInstruction = `Please improve the clarity, specificity, and directness of the following prompt. Rewrite it as a well-formed, actionable query that would result in a high-quality AI response. Do not simply correct capitalization or punctuation. If the prompt is already clear, rephrase it to add context or specificity. Return only the refined prompt, no additional notes.
+      const refinementInstruction = `Please either:
+1️⃣ Rewrite the prompt to improve clarity, specificity, or directness, 
+OR
+2️⃣ Ask the user clarifying questions that would help improve the prompt.
+Return only the rewritten prompt or clarifying questions.
 
 Original prompt: "${prompt}"`;
 

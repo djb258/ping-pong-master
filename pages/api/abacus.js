@@ -53,70 +53,55 @@ async function callActualAbacusAPI(prompt) {
   // Simulated processing delay for demo/fallback
   await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
   
-  // Simulated refined prompt with intelligent enhancements
-  const refinements = [
-    "Enhanced clarity and specificity",
-    "Added contextual framework",
-    "Improved actionability",
-    "Structured for better comprehension",
-    "Optimized for target audience"
-  ];
-  
-  const selectedRefinements = refinements
-    .sort(() => 0.5 - Math.random())
-    .slice(0, 2 + Math.floor(Math.random() * 2));
-  
-  return `**REFINED PROMPT:**
-
-${prompt}
-
-**ENHANCEMENTS APPLIED:**
-${selectedRefinements.map(r => `• ${r}`).join('\n')}
-
-**ENHANCED VERSION:**
-
-${generateEnhancedPrompt(prompt)}
-
-**REFINEMENT NOTES:**
-This prompt has been optimized for clarity, specificity, and actionability. The enhanced version provides better context and structure to improve AI response quality.`;
+  // Simulated refined prompt - focused on clarity and specificity only
+  return generateClearerPrompt(prompt);
 }
 
 /**
- * Generate an enhanced version of the input prompt
+ * Generate a clearer, more specific version of the input prompt
+ * Focus only on improving clarity and specificity, not adding generic structure
  */
-function generateEnhancedPrompt(originalPrompt) {
-  const enhancements = {
-    structure: [
-      "Please provide a comprehensive response that includes:",
-      "In your response, please address the following aspects:",
-      "Structure your answer to cover these key areas:",
-    ],
-    context: [
-      "Consider the context of modern best practices when",
-      "Taking into account current industry standards,",
-      "With consideration for practical implementation,",
-    ],
-    specificity: [
-      "Be specific about methodologies, tools, and approaches.",
-      "Include concrete examples and actionable steps.",
-      "Provide detailed explanations with practical applications.",
-    ],
-  };
+function generateClearerPrompt(originalPrompt) {
+  // Simple refinements that improve clarity without adding boilerplate
+  const clarityImprovements = [
+    // Make vague terms more specific
+    { from: /\bthing\b/gi, to: 'specific element' },
+    { from: /\bstuff\b/gi, to: 'specific items' },
+    { from: /\bgood\b/gi, to: 'effective' },
+    { from: /\bbad\b/gi, to: 'ineffective' },
+    
+    // Improve question clarity
+    { from: /^how do i\s+/i, to: 'What is the specific process to ' },
+    { from: /^what is\s+/i, to: 'Please define ' },
+    { from: /^tell me about\s+/i, to: 'Please explain ' },
+    
+    // Add specificity to common requests
+    { from: /\bhelp me\b/gi, to: 'provide guidance on' },
+    { from: /\bshow me\b/gi, to: 'demonstrate' },
+  ];
   
-  const randomStructure = enhancements.structure[Math.floor(Math.random() * enhancements.structure.length)];
-  const randomContext = enhancements.context[Math.floor(Math.random() * enhancements.context.length)];
-  const randomSpecificity = enhancements.specificity[Math.floor(Math.random() * enhancements.specificity.length)];
+  let refined = originalPrompt.trim();
   
-  return `${randomContext} ${originalPrompt}
-
-${randomStructure}
-1. Core concepts and definitions
-2. Practical implementation steps
-3. Best practices and recommendations
-4. Potential challenges and solutions
-5. Real-world examples and use cases
-
-${randomSpecificity}`;
+  // Apply clarity improvements
+  clarityImprovements.forEach(improvement => {
+    refined = refined.replace(improvement.from, improvement.to);
+  });
+  
+  // If the prompt is very short (< 10 words), add minimal context request
+  const wordCount = refined.split(/\s+/).length;
+  if (wordCount < 10 && !refined.includes('?')) {
+    refined += '. Please be specific in your response.';
+  }
+  
+  // Ensure proper sentence structure
+  if (!refined.endsWith('.') && !refined.endsWith('?') && !refined.endsWith('!')) {
+    refined += '.';
+  }
+  
+  // Capitalize first letter
+  refined = refined.charAt(0).toUpperCase() + refined.slice(1);
+  
+  return refined;
 }
 
 /**

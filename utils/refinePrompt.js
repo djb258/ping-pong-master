@@ -33,8 +33,8 @@ async function callAbacusAPI(input) {
     return data.refinedPrompt;
   } catch (error) {
     console.error('Abacus API call failed:', error);
-    // Fallback refinement for demo purposes
-    return `[REFINED] ${input}\n\nThis prompt has been enhanced with:\n- Clearer structure\n- Better context\n- Improved specificity`;
+    // Simple fallback refinement focusing on clarity only
+    return generateSimpleFallbackRefinement(input);
   }
 }
 
@@ -120,6 +120,29 @@ export async function refinePrompt(input, provider = LLMProviders.ABACUS) {
  * Export available providers for UI selection
  */
 export { LLMProviders };
+
+/**
+ * Simple fallback refinement for when API calls fail
+ * Focuses only on basic clarity improvements
+ */
+function generateSimpleFallbackRefinement(input) {
+  let refined = input.trim();
+  
+  // Basic clarity improvements
+  if (!refined.endsWith('.') && !refined.endsWith('?') && !refined.endsWith('!')) {
+    refined += '.';
+  }
+  
+  // Capitalize first letter
+  refined = refined.charAt(0).toUpperCase() + refined.slice(1);
+  
+  // Add minimal specificity if very vague
+  if (refined.length < 20) {
+    refined = `Please provide specific details about: ${refined.toLowerCase()}`;
+  }
+  
+  return refined;
+}
 
 /**
  * Health check function for provider availability

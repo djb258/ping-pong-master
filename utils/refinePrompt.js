@@ -31,11 +31,12 @@ async function callAbacusAPI(input) {
 
     const data = await response.json();
     return data.refinedPrompt;
-  } catch (error) {
-    console.error('Abacus API call failed:', error);
-    // Simple fallback refinement focusing on clarity only
-    return generateSimpleFallbackRefinement(input);
-  }
+      } catch (error) {
+      console.error('Abacus API call failed:', error);
+      // Simple fallback refinement focusing on clarity only
+      const fallbackRefinement = generateSimpleFallbackRefinement(input);
+      return cleanPong(fallbackRefinement, input);
+    }
 }
 
 /**
@@ -88,11 +89,14 @@ export async function refinePrompt(input, provider = LLMProviders.ABACUS) {
   const startTime = Date.now();
   
   try {
-    const refinedPrompt = await providerFunction(input.trim());
+    const rawRefinedPrompt = await providerFunction(input.trim());
     const endTime = Date.now();
     
+    // Clean the pong response to remove filler and ensure quality
+    const cleanedPrompt = cleanPong(rawRefinedPrompt, input.trim());
+    
     return {
-      refinedPrompt,
+      refinedPrompt: cleanedPrompt,
       metadata: {
         provider,
         processingTimeMs: endTime - startTime,
@@ -120,6 +124,52 @@ export async function refinePrompt(input, provider = LLMProviders.ABACUS) {
  * Export available providers for UI selection
  */
 export { LLMProviders };
+
+/**
+ * Clean and validate the pong response from LLM providers
+ * Removes filler phrases and ensures quality output
+ */
+function cleanPong(pong, ping) {
+  let cleaned = pong.trim();
+  
+  // Remove common filler phrases that add no value
+  const fillerPhrases = [
+    /Please be specific in your response\.?/gi,
+    /Please provide more details\.?/gi,
+    /Be more specific\.?/gi,
+    /Add more context\.?/gi,
+    /Include specific examples\.?/gi,
+    /Provide concrete details\.?/gi,
+  ];
+  
+  fillerPhrases.forEach(phrase => {
+    cleaned = cleaned.replace(phrase, '');
+  });
+  
+  // Clean up extra whitespace
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+  
+  // If pong is identical to ping, try to add minimal improvement
+  if (cleaned.toLowerCase() === ping.toLowerCase()) {
+    // Add minimal refinement to avoid returning identical text
+    if (ping.length < 50 && !ping.includes('?')) {
+      cleaned = `${cleaned}. What specific aspects would you like me to address?`;
+    } else {
+      // For longer prompts, just ensure proper capitalization and punctuation
+      cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+      if (!cleaned.endsWith('.') && !cleaned.endsWith('?') && !cleaned.endsWith('!')) {
+        cleaned += '.';
+      }
+    }
+  }
+  
+  // Ensure the cleaned result isn't empty
+  if (!cleaned || cleaned.length === 0) {
+    cleaned = ping; // Fallback to original if cleaning resulted in empty string
+  }
+  
+  return cleaned;
+}
 
 /**
  * Simple fallback refinement for when API calls fail

@@ -108,6 +108,32 @@ export default function PingPongForm() {
     URL.revokeObjectURL(url);
   }, [pingPongHistory]);
 
+  /**
+   * Test Abacus API directly
+   */
+  const testAbacusAPI = async () => {
+    try {
+      const response = await fetch('/api/test-abacus', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: 'best places to eat Bedford, Pennsylvania' })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        alert(`✅ ABACUS TEST SUCCESS!\n\nExtracted Response:\n${data.extractedResponse}\n\nCheck console for full details.`);
+        console.log('=== ABACUS TEST RESULT ===', data);
+      } else {
+        alert(`❌ ABACUS TEST FAILED!\n\nError: ${data.error}\n\nDetails: ${data.details || 'None'}`);
+        console.error('=== ABACUS TEST FAILED ===', data);
+      }
+    } catch (error) {
+      alert(`❌ TEST ERROR!\n\n${error.message}`);
+      console.error('Test error:', error);
+    }
+  };
+
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px', fontFamily: 'Arial, sans-serif' }}>
       {/* Ping input form */}
@@ -241,21 +267,37 @@ export default function PingPongForm() {
         </div>
       )}
 
-      {/* Export button */}
-      <button
-        onClick={handleExport}
-        disabled={pingPongHistory.length === 0}
-        style={{
-          padding: '10px 20px',
-          backgroundColor: pingPongHistory.length === 0 ? '#ccc' : '#28a745',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: pingPongHistory.length === 0 ? 'not-allowed' : 'pointer'
-        }}
-      >
-        Export JSON ({pingPongHistory.length})
-      </button>
+      {/* Export and Test buttons */}
+      <div style={{ display: 'flex', gap: '10px' }}>
+        <button
+          onClick={handleExport}
+          disabled={pingPongHistory.length === 0}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: pingPongHistory.length === 0 ? '#ccc' : '#28a745',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: pingPongHistory.length === 0 ? 'not-allowed' : 'pointer'
+          }}
+        >
+          Export JSON ({pingPongHistory.length})
+        </button>
+        
+        <button
+          onClick={testAbacusAPI}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#ff9800',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          🧪 Test Abacus API
+        </button>
+      </div>
     </div>
   );
 } 

@@ -15,7 +15,7 @@
 async function callActualAbacusAPI(prompt) {
   // Check if we have Abacus API credentials
   const apiKey = process.env.ABACUS_API_KEY;
-  const apiUrl = process.env.ABACUS_API_URL || 'https://api.abacus.ai/v1/chat/completions';
+  const apiUrl = process.env.ABACUS_API_URL || 'https://api.abacus.ai/api/v0/chatLLM';
   
   console.log(`[Abacus API] API Key present: ${!!apiKey}`);
   console.log(`[Abacus API] API URL: ${apiUrl}`);
@@ -51,8 +51,8 @@ Your task is to help the user improve their prompt for a large language model (L
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      model: process.env.ABACUS_MODEL || 'gpt-3.5-turbo',
-      max_tokens: parseInt(process.env.ABACUS_MAX_TOKENS) || 1000,
+      llmName: process.env.ABACUS_MODEL || 'gpt-4o',
+      maxTokens: parseInt(process.env.ABACUS_MAX_TOKENS) || 1000,
       temperature: parseFloat(process.env.ABACUS_TEMPERATURE) || 0.7,
     };
 
@@ -80,7 +80,8 @@ Your task is to help the user improve their prompt for a large language model (L
     console.log('[Abacus API] Response data:', JSON.stringify(data, null, 2));
     
     // Extract the refined prompt from the response
-    const refinedPrompt = data.choices?.[0]?.message?.content || 
+    const refinedPrompt = data.response || 
+                         data.choices?.[0]?.message?.content || 
                          data.refined_prompt || 
                          data.result || 
                          data.output ||

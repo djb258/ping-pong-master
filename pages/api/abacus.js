@@ -18,12 +18,15 @@ async function callActualAbacusAPI(prompt) {
   const apiUrl = process.env.ABACUS_API_URL || 'https://api.abacus.ai/api/v0/chatLLM';
   
   console.log(`[Abacus API] API Key present: ${!!apiKey}`);
+  console.log(`[Abacus API] API Key length: ${apiKey ? apiKey.length : 0}`);
   console.log(`[Abacus API] API URL: ${apiUrl}`);
   
   if (!apiKey || apiKey === 'your_abacus_api_key_here') {
     console.log('[Abacus API] No valid API key found, using fallback');
     return generateClearerPrompt(prompt);
   }
+  
+  console.log('[Abacus API] Valid API key found, proceeding with API call');
 
   try {
     // System prompt for Abacus AI Prompt Refiner

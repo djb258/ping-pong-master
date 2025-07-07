@@ -15,8 +15,8 @@
  */
 async function callAbacusAPI(input) {
   try {
-    // Simulated Abacus API call - replace with actual API endpoint
-    // This abstraction allows easy swapping to other LLM providers
+    console.log('[RefinePrompt] Calling Abacus API with input:', input);
+    
     const response = await fetch('/api/abacus', {
       method: 'POST',
       headers: {
@@ -25,12 +25,19 @@ async function callAbacusAPI(input) {
       body: JSON.stringify({ prompt: input }),
     });
 
+    console.log('[RefinePrompt] API response status:', response.status);
+
     if (!response.ok) {
       throw new Error(`Abacus API error: ${response.status}`);
     }
 
     const data = await response.json();
-    return data.refinedPrompt;
+    console.log('[RefinePrompt] API response data:', data);
+    
+    const refinedPrompt = data.refinedPrompt;
+    console.log('[RefinePrompt] Extracted refined prompt:', refinedPrompt);
+    
+    return refinedPrompt;
       } catch (error) {
       console.error('Abacus API call failed:', error);
       // Simple fallback refinement focusing on clarity only
@@ -130,6 +137,9 @@ export { LLMProviders };
  * Removes filler phrases and ensures quality output
  */
 function cleanPong(pong, ping) {
+  console.log('[CleanPong] Original pong:', pong);
+  console.log('[CleanPong] Original ping:', ping);
+  
   let cleaned = pong.trim();
   
   // Remove common filler phrases that add no value
@@ -148,14 +158,18 @@ function cleanPong(pong, ping) {
   
   // Clean up extra whitespace
   cleaned = cleaned.replace(/\s+/g, ' ').trim();
+  console.log('[CleanPong] After cleaning:', cleaned);
   
   // Check if the response contains clarifying questions
   const hasClarifyingQuestions = cleaned.toLowerCase().includes('clarifying') || 
                                 cleaned.toLowerCase().includes('question') ||
                                 cleaned.includes('?') && (cleaned.includes('what') || cleaned.includes('how') || cleaned.includes('which') || cleaned.includes('when') || cleaned.includes('where') || cleaned.includes('why'));
   
+  console.log('[CleanPong] Has clarifying questions:', hasClarifyingQuestions);
+  
   // If it's a clarifying question, preserve it as-is
   if (hasClarifyingQuestions) {
+    console.log('[CleanPong] Returning clarifying questions');
     return cleaned; // Return clarifying questions without further processing
   }
   
@@ -163,16 +177,23 @@ function cleanPong(pong, ping) {
   const normalizedPing = ping.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
   const normalizedPong = cleaned.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
   
+  console.log('[CleanPong] Normalized ping:', normalizedPing);
+  console.log('[CleanPong] Normalized pong:', normalizedPong);
+  console.log('[CleanPong] Are they identical?', normalizedPong === normalizedPing);
+  
   if (normalizedPong === normalizedPing) {
+    console.log('[CleanPong] Returning generic message due to identical content');
     // Input may already be clear, suggest adding context
     return "Your input may already be clear. Can you add more context?\nFor example: type of places (restaurants, parks), preferences (family-friendly, budget)?";
   }
   
   // Ensure the cleaned result isn't empty
   if (!cleaned || cleaned.length === 0) {
+    console.log('[CleanPong] Cleaned result is empty, using original ping');
     cleaned = ping; // Fallback to original if cleaning resulted in empty string
   }
   
+  console.log('[CleanPong] Final result:', cleaned);
   return cleaned;
 }
 

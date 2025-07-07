@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   }
 
   const { prompt } = req.body;
-  const apiKey = process.env.ABACUS_API_KEY;
+  const apiKey = process.env.ABACUS_API_KEY || 's2_ad901b7e536d47769353c72f146d994b';
 
   if (!apiKey) {
     return res.status(500).json({ error: 'No API key configured' });

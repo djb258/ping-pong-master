@@ -14,7 +14,7 @@
  */
 async function callActualAbacusAPI(prompt) {
   // Check if we have Abacus API credentials
-  const apiKey = process.env.ABACUS_API_KEY;
+  const apiKey = process.env.ABACUS_API_KEY || 's2_ad901b7e536d47769353c72f146d994b';
   const apiUrl = process.env.ABACUS_API_URL || 'https://api.abacus.ai/api/v0/chatLLM';
   
   console.log(`[Abacus API] API Key present: ${!!apiKey}`);

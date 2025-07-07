@@ -149,18 +149,14 @@ function cleanPong(pong, ping) {
   // Clean up extra whitespace
   cleaned = cleaned.replace(/\s+/g, ' ').trim();
   
-  // If pong is identical to ping, try to add minimal improvement
-  if (cleaned.toLowerCase() === ping.toLowerCase()) {
-    // Add minimal refinement to avoid returning identical text
-    if (ping.length < 50 && !ping.includes('?')) {
-      cleaned = `${cleaned}. What specific aspects would you like me to address?`;
-    } else {
-      // For longer prompts, just ensure proper capitalization and punctuation
-      cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
-      if (!cleaned.endsWith('.') && !cleaned.endsWith('?') && !cleaned.endsWith('!')) {
-        cleaned += '.';
-      }
-    }
+  // Check if refined pong is functionally identical to ping
+  // Compare normalized versions (alphanumeric only, lowercase)
+  const normalizedPing = ping.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  const normalizedPong = cleaned.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  
+  if (normalizedPong === normalizedPing) {
+    // Refinement not applied; input may already be clear
+    cleaned = "Refinement not applied; input may already be clear.";
   }
   
   // Ensure the cleaned result isn't empty

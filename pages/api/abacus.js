@@ -22,8 +22,8 @@ async function callActualAbacusAPI(prompt) {
   if (apiKey && apiKey !== 'your_abacus_api_key_here') {
     try {
       // Actual Abacus API integration
-             // Wrap user's prompt with focused refinement instruction
-       const refinementInstruction = `Please rewrite the following prompt to improve clarity, specificity, and intent without adding unnecessary instructions or filler. Return only the refined prompt text in plain English without additional notes or lists.
+      // Wrap user's prompt with meaningful refinement instruction
+      const refinementInstruction = `Please improve the clarity, specificity, and directness of the following prompt. Rewrite it as a well-formed, actionable query that would result in a high-quality AI response. Do not simply correct capitalization or punctuation. If the prompt is already clear, rephrase it to add context or specificity. Return only the refined prompt, no additional notes.
 
 Original prompt: "${prompt}"`;
 

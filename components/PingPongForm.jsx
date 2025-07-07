@@ -1,41 +1,32 @@
 /**
  * PingPongForm Component
  * 
- * Main UI component for the Ping-Pong Prompt application.
- * Follows Barton Doctrine principles:
- * - Single responsibility (UI and state management)
- * - Clear separation of concerns
- * - Modular, reusable design
- * - Proper error handling and user feedback
+ * Minimal UI for ping-pong prompt refinement.
+ * Core elements: input, submit, display, export.
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { refinePrompt, LLMProviders } from '../utils/refinePrompt';
-import styles from '../styles/PingPongForm.module.css';
 
 /**
  * Create clean STAMPED/SPVPET/STACKED compliant export entry
- * Focuses on essential data without clutter
  */
 const createCleanExportEntry = (ping, pong, metadata) => ({
   ping: ping,
   pong: pong,
-  refinement_notes: `Clarity and specificity improvements applied via ${metadata.provider}`,
-  source: metadata.provider === 'abacus' ? 'Abacus' : metadata.provider,
+  refinement_notes: "",
+  source: metadata.provider === 'abacus' ? 'Abacus' : metadata.provider.charAt(0).toUpperCase() + metadata.provider.slice(1),
   timestamp: new Date().toISOString(),
-  processing_time_ms: metadata.processingTimeMs,
 });
 
 export default function PingPongForm() {
-  // Clean state management: input, processing state, and history
   const [pingInput, setPingInput] = useState('');
+  const [currentPong, setCurrentPong] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [pingPongHistory, setPingPongHistory] = useState([]);
-  const [selectedProvider, setSelectedProvider] = useState(LLMProviders.ABACUS);
 
   /**
    * Handle ping submission and pong generation
-   * Implements proper error handling and user feedback
    */
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
@@ -46,12 +37,15 @@ export default function PingPongForm() {
     }
 
     setIsProcessing(true);
-    const pingTimestamp = new Date().toISOString();
+    setCurrentPong(''); // Clear previous pong
 
     try {
-      const result = await refinePrompt(pingInput, selectedProvider);
+      const result = await refinePrompt(pingInput, LLMProviders.ABACUS);
       
-      // Create clean export entry focused on core refinement data
+      // Update current pong display
+      setCurrentPong(result.refinedPrompt);
+      
+      // Create clean export entry
       const exportEntry = createCleanExportEntry(
         pingInput,
         result.refinedPrompt,
@@ -67,11 +61,10 @@ export default function PingPongForm() {
     } finally {
       setIsProcessing(false);
     }
-  }, [pingInput, selectedProvider]);
+  }, [pingInput]);
 
   /**
    * Export ping-pong history as clean STAMPED/SPVPET/STACKED compliant JSON
-   * Each entry contains: ping, pong, refinement_notes, source, timestamp
    */
   const handleExport = useCallback(() => {
     if (pingPongHistory.length === 0) {
@@ -79,10 +72,16 @@ export default function PingPongForm() {
       return;
     }
 
-    // Clean export format - array of refinement entries
-    const exportData = pingPongHistory;
+    // Ensure clean export format with proper STAMPED/SPVPET/STACKED structure
+    const cleanedExportData = pingPongHistory.map(entry => ({
+      ping: entry.ping || "",
+      pong: entry.pong || "",
+      refinement_notes: entry.refinement_notes || "",
+      source: entry.source || "Unknown",
+      timestamp: entry.timestamp || new Date().toISOString(),
+    }));
 
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+    const blob = new Blob([JSON.stringify(cleanedExportData, null, 2)], {
       type: 'application/json',
     });
 
@@ -96,108 +95,80 @@ export default function PingPongForm() {
     URL.revokeObjectURL(url);
   }, [pingPongHistory]);
 
-  /**
-   * Clear all history (with confirmation)
-   */
-  const handleClearHistory = useCallback(() => {
-    if (pingPongHistory.length === 0) return;
-    
-    if (window.confirm('Are you sure you want to clear all ping-pong history? This action cannot be undone.')) {
-      setPingPongHistory([]);
-    }
-  }, [pingPongHistory.length]);
-
   return (
-    <div className={styles.container}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>Ping-Pong Prompt App</h1>
-        <p className={styles.subtitle}>
-          Refine prompts for clarity and specificity
-        </p>
-      </header>
-
+    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px', fontFamily: 'Arial, sans-serif' }}>
       {/* Ping input form */}
-      <form onSubmit={handleSubmit} className={styles.form}>
-        <div className={styles.inputGroup}>
-          <label htmlFor="ping-input" className={styles.label}>
-            Enter prompt to refine:
+      <form onSubmit={handleSubmit} style={{ marginBottom: '20px' }}>
+        <div style={{ marginBottom: '15px' }}>
+          <label htmlFor="ping-input" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+            Ping:
           </label>
           <textarea
             id="ping-input"
             value={pingInput}
             onChange={(e) => setPingInput(e.target.value)}
             placeholder="Enter your prompt here..."
-            className={styles.textarea}
-            rows={3}
+            style={{
+              width: '100%',
+              minHeight: '80px',
+              padding: '10px',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              resize: 'vertical'
+            }}
             disabled={isProcessing}
-            maxLength={2000}
           />
         </div>
         
         <button
           type="submit"
           disabled={isProcessing || !pingInput.trim()}
-          className={styles.submitButton}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: isProcessing || !pingInput.trim() ? '#ccc' : '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: isProcessing || !pingInput.trim() ? 'not-allowed' : 'pointer'
+          }}
         >
-          {isProcessing ? 'Refining...' : 'Refine Prompt'}
+          {isProcessing ? 'Processing...' : 'Submit'}
         </button>
       </form>
 
-      {/* Export button */}
-      <div className={styles.actionButtons}>
-        <button
-          onClick={handleExport}
-          disabled={pingPongHistory.length === 0}
-          className={styles.exportButton}
-        >
-          Export JSON ({pingPongHistory.length})
-        </button>
-      </div>
+      {/* Pong display */}
+      {currentPong && (
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+            Pong:
+          </label>
+          <div style={{
+            padding: '15px',
+            backgroundColor: '#f8f9fa',
+            border: '1px solid #e9ecef',
+            borderRadius: '4px',
+            whiteSpace: 'pre-wrap'
+          }}>
+            {currentPong}
+          </div>
+        </div>
+      )}
 
-      {/* Refinement history display */}
-      <div className={styles.historySection}>
-        <h2 className={styles.historyTitle}>
-          Refinement History
-        </h2>
-        
-        {pingPongHistory.length === 0 ? (
-          <div className={styles.emptyState}>
-            <p>No refinements yet. Submit your first prompt above!</p>
-          </div>
-        ) : (
-          <div className={styles.historyList}>
-            {pingPongHistory.map((entry, index) => (
-              <div key={index} className={styles.exchangeCard}>
-                <div className={styles.exchangeHeader}>
-                  <span className={styles.exchangeNumber}>
-                    #{index + 1}
-                  </span>
-                  <span className={styles.exchangeTime}>
-                    {new Date(entry.timestamp).toLocaleString()}
-                  </span>
-                  <span className={styles.exchangeProvider}>
-                    {entry.source}
-                  </span>
-                </div>
-                
-                <div className={styles.pingSection}>
-                  <h4 className={styles.pingTitle}>Original:</h4>
-                  <p className={styles.pingContent}>
-                    {entry.ping}
-                  </p>
-                </div>
-                
-                <div className={styles.pongSection}>
-                  <h4 className={styles.pongTitle}>Refined:</h4>
-                  <div className={styles.pongContent}>
-                    {entry.pong}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Export button */}
+      <button
+        onClick={handleExport}
+        disabled={pingPongHistory.length === 0}
+        style={{
+          padding: '10px 20px',
+          backgroundColor: pingPongHistory.length === 0 ? '#ccc' : '#28a745',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: pingPongHistory.length === 0 ? 'not-allowed' : 'pointer'
+        }}
+      >
+        Export JSON ({pingPongHistory.length})
+      </button>
     </div>
   );
 } 

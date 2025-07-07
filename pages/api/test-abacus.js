@@ -9,15 +9,60 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log('=== ABACUS API TEST ===');
+    console.log('=== ABACUS API TEST START ===');
+    
+    // Debug environment variables
+    console.log('All env vars:', Object.keys(process.env).filter(key => key.includes('ABACUS')));
+    console.log('NODE_ENV:', process.env.NODE_ENV);
     
     const apiKey = process.env.ABACUS_API_KEY || 's2_ad901b7e536d47769353c72f146d994b';
-    console.log('API Key:', apiKey ? `${apiKey.substring(0, 10)}...` : 'NOT FOUND');
+    console.log('API Key found:', !!apiKey);
+    console.log('API Key length:', apiKey ? apiKey.length : 0);
+    console.log('API Key preview:', apiKey ? `${apiKey.substring(0, 10)}...` : 'NOT FOUND');
 
     const testPrompt = req.body.prompt || "Write a professional email";
     console.log('Test prompt:', testPrompt);
 
-    // Test different potential endpoints
+    // First, let's test a simple request to see if the API key works at all
+    const simpleTestUrl = 'https://api.abacus.ai/api/v0/chat';
+    const simplePayload = {
+      messages: [
+        { role: 'user', content: 'Hello, test message' }
+      ],
+      model: 'gpt-4o',
+      maxTokens: 50
+    };
+
+    console.log('\n=== SIMPLE TEST ===');
+    console.log('URL:', simpleTestUrl);
+    console.log('Payload:', JSON.stringify(simplePayload, null, 2));
+
+    try {
+      const simpleResponse = await fetch(simpleTestUrl, {
+        method: 'POST',
+        headers: {
+          'apiKey': apiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(simplePayload)
+      });
+
+      console.log('Simple response status:', simpleResponse.status);
+      const simpleResponseText = await simpleResponse.text();
+      console.log('Simple response text:', simpleResponseText);
+
+      if (simpleResponse.ok) {
+        return res.status(200).json({
+          success: true,
+          message: 'Simple test worked!',
+          response: simpleResponseText
+        });
+      }
+    } catch (simpleError) {
+      console.log('Simple test error:', simpleError.message);
+    }
+
+    // Test different potential endpoints with more debugging
     const possibleUrls = [
       'https://api.abacus.ai/api/v0/nlpChatResponse',
       'https://api.abacus.ai/v1/chat/completions',
@@ -37,9 +82,10 @@ export default async function handler(req, res) {
       stream: false
     };
 
+    console.log('\n=== FULL TEST ===');
     console.log('Payload:', JSON.stringify(payload, null, 2));
 
-    let lastError = null;
+    let allResults = [];
 
     for (const url of possibleUrls) {
       try {
@@ -60,6 +106,16 @@ export default async function handler(req, res) {
         const responseText = await response.text();
         console.log('Raw response text:', responseText);
 
+        const result = {
+          url,
+          status: response.status,
+          statusText: response.statusText,
+          responseText,
+          headers: Object.fromEntries(response.headers.entries())
+        };
+
+        allResults.push(result);
+
         if (response.ok) {
           try {
             const data = JSON.parse(responseText);
@@ -68,7 +124,8 @@ export default async function handler(req, res) {
               success: true,
               workingUrl: url,
               response: data,
-              message: 'Found working endpoint!'
+              message: 'Found working endpoint!',
+              allResults
             });
           } catch (parseError) {
             console.log('JSON parse error:', parseError.message);
@@ -76,24 +133,17 @@ export default async function handler(req, res) {
               success: true,
               workingUrl: url,
               response: responseText,
-              message: 'Endpoint responded but not JSON'
+              message: 'Endpoint responded but not JSON',
+              allResults
             });
           }
-        } else {
-          lastError = {
-            url,
-            status: response.status,
-            statusText: response.statusText,
-            response: responseText
-          };
-          console.log('HTTP error:', lastError);
         }
       } catch (fetchError) {
-        lastError = {
+        console.log('Fetch error:', fetchError.message);
+        allResults.push({
           url,
           error: fetchError.message
-        };
-        console.log('Fetch error:', lastError);
+        });
       }
     }
 
@@ -101,8 +151,12 @@ export default async function handler(req, res) {
     return res.status(400).json({
       success: false,
       message: 'All endpoints failed',
-      lastError,
-      testedUrls: possibleUrls
+      allResults,
+      apiKeyStatus: {
+        found: !!apiKey,
+        length: apiKey ? apiKey.length : 0,
+        preview: apiKey ? `${apiKey.substring(0, 10)}...` : 'NOT FOUND'
+      }
     });
 
   } catch (error) {
@@ -110,7 +164,8 @@ export default async function handler(req, res) {
     return res.status(500).json({
       success: false,
       error: error.message,
-      stack: error.stack
+      stack: error.stack,
+      message: 'Test endpoint crashed'
     });
   }
 } 

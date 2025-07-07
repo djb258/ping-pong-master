@@ -120,13 +120,15 @@ export default function PingPongForm() {
       });
       
       const data = await response.json();
+      console.log('=== ABACUS TEST RESULT ===', data);
       
       if (data.success) {
-        alert(`✅ ABACUS TEST SUCCESS!\n\nExtracted Response:\n${data.extractedResponse}\n\nCheck console for full details.`);
-        console.log('=== ABACUS TEST RESULT ===', data);
+        const responseText = data.response || data.responseText || 'Success but no response text';
+        alert(`✅ ABACUS TEST SUCCESS!\n\nWorking URL: ${data.workingUrl || 'Unknown'}\n\nResponse: ${typeof responseText === 'string' ? responseText.substring(0, 200) : JSON.stringify(responseText).substring(0, 200)}...\n\nCheck console for full details.`);
       } else {
-        alert(`❌ ABACUS TEST FAILED!\n\nError: ${data.error}\n\nDetails: ${data.details || 'None'}`);
-        console.error('=== ABACUS TEST FAILED ===', data);
+        const errorDetails = data.error || data.message || 'Unknown error';
+        const apiKeyStatus = data.apiKeyStatus ? `\nAPI Key Status: ${data.apiKeyStatus.found ? 'Found' : 'Not Found'} (${data.apiKeyStatus.preview})` : '';
+        alert(`❌ ABACUS TEST FAILED!\n\nError: ${errorDetails}${apiKeyStatus}\n\nCheck console for full details.`);
       }
     } catch (error) {
       alert(`❌ TEST ERROR!\n\n${error.message}`);

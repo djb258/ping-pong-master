@@ -21,6 +21,36 @@ export default async function handler(req, res) {
     // Based on the Abacus.AI AI Workflows documentation, they use evaluate_prompt
     // Example from their docs: ApiClient().evaluate_prompt(prompt=nlp_query, system_message=f'respond like {character}').content
     
+    // First, do a quick connectivity test
+    console.log('\n=== QUICK CONNECTIVITY TEST ===');
+    try {
+      const quickResponse = await fetch('https://api.abacus.ai/api/v0/listProjects', {
+        method: 'GET',
+        headers: { 'apiKey': apiKey },
+        signal: AbortSignal.timeout(10000) // 10 second timeout
+      });
+      console.log('Quick test status:', quickResponse.status);
+      if (!quickResponse.ok) {
+        const quickText = await quickResponse.text();
+        return res.status(400).json({
+          success: false,
+          message: 'Basic API access failed',
+          status: quickResponse.status,
+          response: quickText,
+          apiKeyStatus: { found: true, preview: `${apiKey.substring(0, 10)}...` }
+        });
+      }
+      console.log('✅ Basic API access works');
+    } catch (quickError) {
+      console.log('Quick test failed:', quickError.message);
+      return res.status(500).json({
+        success: false,
+        message: 'Cannot connect to Abacus.AI API',
+        error: quickError.message,
+        apiKeyStatus: { found: true, preview: `${apiKey.substring(0, 10)}...` }
+      });
+    }
+
     console.log('\n=== TESTING EVALUATE_PROMPT ENDPOINT ===');
     
     const evaluatePromptPayload = {
@@ -32,21 +62,33 @@ export default async function handler(req, res) {
 
     console.log('Request payload:', JSON.stringify(evaluatePromptPayload, null, 2));
 
+    // Create an AbortController for timeout handling
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      console.log('Request timeout - aborting');
+      controller.abort();
+    }, 30000); // 30 second timeout
+
     try {
+      console.log('Making fetch request...');
       const response = await fetch('https://api.abacus.ai/api/v0/evaluatePrompt', {
         method: 'POST',
         headers: {
           'apiKey': apiKey,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(evaluatePromptPayload)
+        body: JSON.stringify(evaluatePromptPayload),
+        signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
+      console.log('Response received!');
       console.log('Response status:', response.status);
       console.log('Response headers:', Object.fromEntries(response.headers.entries()));
       
       const responseText = await response.text();
-      console.log('Raw response:', responseText);
+      console.log('Raw response length:', responseText.length);
+      console.log('Raw response preview:', responseText.substring(0, 500));
 
       if (response.ok) {
         try {
@@ -108,15 +150,29 @@ export default async function handler(req, res) {
           note: 'Your API key works for basic access but evaluate_prompt may require different permissions or parameters'
         });
       }
-    } catch (fetchError) {
-      console.log('Fetch error:', fetchError.message);
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to call evaluate_prompt endpoint',
-        error: fetchError.message,
-        apiKeyStatus: { found: true, preview: `${apiKey.substring(0, 10)}...` }
-      });
-    }
+         } catch (fetchError) {
+       clearTimeout(timeoutId);
+       
+       if (fetchError.name === 'AbortError') {
+         console.log('Request timed out after 30 seconds');
+         return res.status(408).json({
+           success: false,
+           message: 'Request timed out after 30 seconds',
+           error: 'Timeout',
+           apiKeyStatus: { found: true, preview: `${apiKey.substring(0, 10)}...` },
+           note: 'The API call took too long to respond'
+         });
+       }
+       
+       console.log('Fetch error:', fetchError.message);
+       return res.status(500).json({
+         success: false,
+         message: 'Failed to call evaluate_prompt endpoint',
+         error: fetchError.message,
+         errorType: fetchError.name,
+         apiKeyStatus: { found: true, preview: `${apiKey.substring(0, 10)}...` }
+       });
+     }
 
   } catch (error) {
     console.error('Test error:', error);

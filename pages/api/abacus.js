@@ -10,74 +10,95 @@
  */
 
 /**
- * Simulated Abacus API client
- * In production, this would connect to the actual Abacus API
+ * Call Abacus API for prompt refinement
  */
 async function callActualAbacusAPI(prompt) {
   // Check if we have Abacus API credentials
   const apiKey = process.env.ABACUS_API_KEY;
-  const apiUrl = process.env.ABACUS_API_URL || 'https://api.abacus.ai/v1/refine';
-  const orgId = process.env.ABACUS_ORG_ID;
+  const apiUrl = process.env.ABACUS_API_URL || 'https://api.abacus.ai/v1/chat/completions';
   
-  if (apiKey && apiKey !== 'your_abacus_api_key_here') {
-    try {
-      // Actual Abacus API integration
-      // System prompt for Abacus AI Prompt Refiner
-      const systemPrompt = `You are an expert AI Prompt Refiner.
-
-Your job is to take the user's raw prompt and improve it. You MUST do one of the following:
-
-1. Rewrite the prompt to be clearer, more specific, or more actionable.
-2. Add relevant clarifying context to help a downstream LLM give a better response.
-3. If you cannot refine it without more info, ask the user **specific clarifying questions** to improve the prompt.
-
-DO NOT return the original prompt unchanged.
-DO NOT just restate what the user said.
-DO NOT respond with "refinement not applied."
-
-Your output should be only:
-- A rewritten prompt if you're confident
-- OR a list of questions to ask the user for more detail.`;
-
-      // User prompt to refine
-      const userPrompt = `Please refine this prompt: "${prompt}"`;
-
-       const response = await fetch(apiUrl, {
-         method: 'POST',
-         headers: {
-           'Authorization': `Bearer ${apiKey}`,
-           'Content-Type': 'application/json',
-           ...(orgId && { 'X-Organization-ID': orgId }),
-         },
-         body: JSON.stringify({
-           messages: [
-             { role: 'system', content: systemPrompt },
-             { role: 'user', content: userPrompt }
-           ],
-           model: process.env.ABACUS_MODEL || 'abacus-default',
-           max_tokens: parseInt(process.env.ABACUS_MAX_TOKENS) || 4000,
-           temperature: parseFloat(process.env.ABACUS_TEMPERATURE) || 0.7,
-         }),
-         timeout: parseInt(process.env.REQUEST_TIMEOUT_MS) || 30000,
-       });
-
-      if (!response.ok) {
-        throw new Error(`Abacus API error: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return data.refined_prompt || data.result || data.output;
-    } catch (error) {
-      console.error('Abacus API call failed:', error);
-      // Fall back to simulation if API fails
-    }
+  console.log(`[Abacus API] API Key present: ${!!apiKey}`);
+  console.log(`[Abacus API] API URL: ${apiUrl}`);
+  
+  if (!apiKey || apiKey === 'your_abacus_api_key_here') {
+    console.log('[Abacus API] No valid API key found, using fallback');
+    return generateClearerPrompt(prompt);
   }
-  
-  // Simulated processing delay for demo/fallback
-  await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
-  
-  // Simulated refined prompt - focused on clarity and specificity only
-  return generateClearerPrompt(prompt);
+
+  try {
+    // System prompt for Abacus AI Prompt Refiner
+    const systemPrompt = `You are an Expert Prompt Refiner.
+
+Your task is to help the user improve their prompt for a large language model (LLM). You MUST do one of the following:
+
+1️⃣ If the prompt is vague or could be made more specific, REWRITE it with clearer wording, structure, or context.
+
+2️⃣ If the prompt is already clear but could use enhancement, ADD contextual elements like timeframe, examples, or qualifiers.
+
+3️⃣ If you genuinely need more info, ask the user **exactly 3 specific questions** to clarify their intent.
+
+⛔ NEVER repeat the original prompt as-is.  
+⛔ NEVER just say "your input may be clear."  
+✅ Always return either:
+– A rewritten version  
+– OR 3 sharp, useful clarifying questions`;
+
+    // User prompt to refine
+    const userPrompt = `Please refine this prompt: "${prompt}"`;
+
+    const requestBody = {
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
+      model: process.env.ABACUS_MODEL || 'gpt-3.5-turbo',
+      max_tokens: parseInt(process.env.ABACUS_MAX_TOKENS) || 1000,
+      temperature: parseFloat(process.env.ABACUS_TEMPERATURE) || 0.7,
+    };
+
+    console.log('[Abacus API] Making request to:', apiUrl);
+    console.log('[Abacus API] Request body:', JSON.stringify(requestBody, null, 2));
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    console.log(`[Abacus API] Response status: ${response.status}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[Abacus API] Error response: ${errorText}`);
+      throw new Error(`Abacus API error: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    console.log('[Abacus API] Response data:', JSON.stringify(data, null, 2));
+    
+    // Extract the refined prompt from the response
+    const refinedPrompt = data.choices?.[0]?.message?.content || 
+                         data.refined_prompt || 
+                         data.result || 
+                         data.output ||
+                         data.text;
+    
+    if (!refinedPrompt) {
+      console.error('[Abacus API] No valid response content found');
+      throw new Error('No valid response content from Abacus API');
+    }
+    
+    return refinedPrompt.trim();
+    
+  } catch (error) {
+    console.error('[Abacus API] Call failed:', error);
+    console.log('[Abacus API] Falling back to local refinement');
+    // Fall back to local refinement if API fails
+    return generateClearerPrompt(prompt);
+  }
 }
 
 /**

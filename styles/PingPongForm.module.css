@@ -371,7 +371,9 @@
 
 /* Accessibility improvements */
 @media (prefers-reduced-motion: reduce) {
-  * {
+  .container *,
+  .container *::before,
+  .container *::after {
     transition: none !important;
     animation: none !important;
   }
@@ -398,6 +400,8 @@
   }
   
   .title {
-    -webkit-text-fill-color: #333;
+    background: none;
+    color: #333;
+    -webkit-text-fill-color: unset;
   }
 } 

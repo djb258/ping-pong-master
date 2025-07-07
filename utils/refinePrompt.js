@@ -44,8 +44,8 @@ export async function refinePrompt(userPrompt) {
 
     console.log('Using API key:', apiKey.substring(0, 10) + '...');
 
-    // Based on the Abacus.AI documentation, it seems like we need to use their specific API structure
-    // Let's try the approach that matches their documentation examples
+    // Based on the Abacus.AI documentation, they use evaluate_prompt
+    // Example from their docs: ApiClient().evaluate_prompt(prompt=nlp_query, system_message=f'respond like {character}').content
     const requestBody = {
       prompt: userPrompt,
       system_message: SYSTEM_PROMPT,
@@ -55,7 +55,7 @@ export async function refinePrompt(userPrompt) {
 
     console.log('Request body:', JSON.stringify(requestBody, null, 2));
 
-    // Try the evaluate_prompt style endpoint based on documentation
+    // Use the correct evaluate_prompt endpoint
     const response = await fetch('https://api.abacus.ai/api/v0/evaluatePrompt', {
       method: 'POST',
       headers: {
@@ -72,17 +72,22 @@ export async function refinePrompt(userPrompt) {
       const errorText = await response.text();
       console.error('API Error Response:', errorText);
       
-      // If this endpoint doesn't work, try a different approach
+      // If this endpoint doesn't work, try a fallback approach
       return await tryAlternativeApproach(userPrompt, apiKey);
     }
 
     const data = await response.json();
     console.log('API Response:', data);
 
-    if (data.success && data.content) {
+    // Check for different possible response formats
+    if (data.content) {
       return data.content;
     } else if (data.result && data.result.content) {
       return data.result.content;
+    } else if (data.response) {
+      return data.response;
+    } else if (typeof data === 'string') {
+      return data;
     } else {
       console.error('Unexpected response format:', data);
       return await tryAlternativeApproach(userPrompt, apiKey);

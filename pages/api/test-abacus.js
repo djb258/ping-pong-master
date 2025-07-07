@@ -18,125 +18,102 @@ export default async function handler(req, res) {
     const testPrompt = req.body.prompt || "Write a professional email";
     console.log('Test prompt:', testPrompt);
 
-    // Based on Abacus.AI documentation, they seem to use a different API structure
-    // Let's try their actual documented endpoints and methods
+    // Based on the Abacus.AI AI Workflows documentation, they use evaluate_prompt
+    // Example from their docs: ApiClient().evaluate_prompt(prompt=nlp_query, system_message=f'respond like {character}').content
     
-    // First, test a simple API call to see if authentication works
-    console.log('\n=== TESTING BASIC API ACCESS ===');
+    console.log('\n=== TESTING EVALUATE_PROMPT ENDPOINT ===');
+    
+    const evaluatePromptPayload = {
+      prompt: testPrompt,
+      system_message: 'You are a helpful assistant that refines prompts to be more clear and effective.',
+      max_tokens: 500,
+      temperature: 0.7
+    };
+
+    console.log('Request payload:', JSON.stringify(evaluatePromptPayload, null, 2));
+
     try {
-      const listProjectsResponse = await fetch('https://api.abacus.ai/api/v0/listProjects', {
-        method: 'GET',
+      const response = await fetch('https://api.abacus.ai/api/v0/evaluatePrompt', {
+        method: 'POST',
         headers: {
           'apiKey': apiKey,
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify(evaluatePromptPayload)
       });
 
-      console.log('listProjects status:', listProjectsResponse.status);
-      const listProjectsText = await listProjectsResponse.text();
-      console.log('listProjects response:', listProjectsText);
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      
+      const responseText = await response.text();
+      console.log('Raw response:', responseText);
 
-      if (listProjectsResponse.ok) {
-        console.log('✅ API Key authentication works!');
-        
-        // Now try to find a chat/LLM endpoint
-        // Based on the documentation, they might use evaluate_prompt or similar
-        const chatEndpoints = [
-          {
-            url: 'https://api.abacus.ai/api/v0/evaluatePrompt',
-            method: 'POST',
-            body: {
-              prompt: testPrompt,
-              system_message: 'You are a helpful assistant.',
-              max_tokens: 100
-            }
-          },
-          {
-            url: 'https://api.abacus.ai/api/v0/nlpChatResponse',
-            method: 'POST',
-            body: {
-              messages: [
-                { role: 'system', content: 'You are a helpful assistant.' },
-                { role: 'user', content: testPrompt }
-              ]
-            }
-          },
-          {
-            url: 'https://api.abacus.ai/api/v0/chatCompletion',
-            method: 'POST',
-            body: {
-              prompt: testPrompt,
-              max_tokens: 100
-            }
+      if (response.ok) {
+        try {
+          const data = JSON.parse(responseText);
+          console.log('Parsed response:', data);
+          
+          // Check for different possible response formats
+          let content = null;
+          if (data.content) {
+            content = data.content;
+          } else if (data.result && data.result.content) {
+            content = data.result.content;
+          } else if (data.response) {
+            content = data.response;
+          } else if (typeof data === 'string') {
+            content = data;
           }
-        ];
 
-        for (const endpoint of chatEndpoints) {
-          try {
-            console.log(`\n--- Testing ${endpoint.url} ---`);
-            console.log('Request body:', JSON.stringify(endpoint.body, null, 2));
-            
-            const response = await fetch(endpoint.url, {
-              method: endpoint.method,
-              headers: {
-                'apiKey': apiKey,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(endpoint.body)
+          if (content) {
+            return res.status(200).json({
+              success: true,
+              workingUrl: 'https://api.abacus.ai/api/v0/evaluatePrompt',
+              response: content,
+              fullResponse: data,
+              message: 'Found working evaluate_prompt endpoint!',
+              apiKeyStatus: { found: true, preview: `${apiKey.substring(0, 10)}...` }
             });
-
-            console.log('Response status:', response.status);
-            const responseText = await response.text();
-            console.log('Response text:', responseText);
-
-            if (response.ok) {
-              try {
-                const data = JSON.parse(responseText);
-                return res.status(200).json({
-                  success: true,
-                  workingUrl: endpoint.url,
-                  response: data,
-                  message: 'Found working chat endpoint!',
-                  apiKeyStatus: { found: true, preview: `${apiKey.substring(0, 10)}...` }
-                });
-              } catch (parseError) {
-                return res.status(200).json({
-                  success: true,
-                  workingUrl: endpoint.url,
-                  response: responseText,
-                  message: 'Endpoint responded but not JSON',
-                  apiKeyStatus: { found: true, preview: `${apiKey.substring(0, 10)}...` }
-                });
-              }
-            }
-          } catch (endpointError) {
-            console.log(`Error with ${endpoint.url}:`, endpointError.message);
+          } else {
+            return res.status(200).json({
+              success: true,
+              workingUrl: 'https://api.abacus.ai/api/v0/evaluatePrompt',
+              response: responseText,
+              fullResponse: data,
+              message: 'Endpoint responded but content format unclear',
+              apiKeyStatus: { found: true, preview: `${apiKey.substring(0, 10)}...` }
+            });
           }
+        } catch (parseError) {
+          console.log('JSON parse error:', parseError.message);
+          return res.status(200).json({
+            success: true,
+            workingUrl: 'https://api.abacus.ai/api/v0/evaluatePrompt',
+            response: responseText,
+            message: 'Endpoint responded but not JSON',
+            apiKeyStatus: { found: true, preview: `${apiKey.substring(0, 10)}...` }
+          });
         }
-
-        return res.status(400).json({
-          success: false,
-          message: 'API key works but no chat endpoints found',
-          apiKeyStatus: { found: true, preview: `${apiKey.substring(0, 10)}...` },
-          note: 'Your API key can access Abacus.AI but chat/LLM endpoints may not be available or may use different format'
-        });
-
       } else {
-        console.log('❌ API Key authentication failed');
+        console.log('evaluate_prompt failed with status:', response.status);
+        console.log('Error response:', responseText);
+        
+        // If evaluate_prompt doesn't work, fall back to testing basic API access
         return res.status(400).json({
           success: false,
-          message: 'API key authentication failed',
-          status: listProjectsResponse.status,
-          response: listProjectsText,
-          apiKeyStatus: { found: true, preview: `${apiKey.substring(0, 10)}...` }
+          message: 'evaluate_prompt endpoint failed',
+          status: response.status,
+          response: responseText,
+          apiKeyStatus: { found: true, preview: `${apiKey.substring(0, 10)}...` },
+          note: 'Your API key works for basic access but evaluate_prompt may require different permissions or parameters'
         });
       }
-    } catch (authError) {
-      console.log('Authentication test error:', authError.message);
+    } catch (fetchError) {
+      console.log('Fetch error:', fetchError.message);
       return res.status(500).json({
         success: false,
-        message: 'Failed to test API authentication',
-        error: authError.message,
+        message: 'Failed to call evaluate_prompt endpoint',
+        error: fetchError.message,
         apiKeyStatus: { found: true, preview: `${apiKey.substring(0, 10)}...` }
       });
     }

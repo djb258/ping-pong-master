@@ -172,82 +172,35 @@ function validateRequest(body) {
 /**
  * Main API handler
  */
+import { refinePrompt } from '../../utils/refinePrompt';
+
 export default async function handler(req, res) {
-  // CORS headers for development
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-  
-  // Only allow POST requests
   if (req.method !== 'POST') {
-    res.setHeader('Allow', ['POST']);
-    return res.status(405).json({
-      error: 'Method not allowed',
-      message: 'This endpoint only supports POST requests',
-    });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
-  
-  const startTime = Date.now();
-  
+
   try {
-    // Validate and extract prompt
-    const prompt = validateRequest(req.body);
+    const { inputPrompt } = req.body;
     
-    // Log request for monitoring (remove in production or use proper logging)
-    console.log(`[Abacus API] Processing prompt: ${prompt.slice(0, 100)}...`);
-    
-    // Call Abacus API (simulated)
-    const refinedPrompt = await callActualAbacusAPI(prompt);
-    
-    const processingTime = Date.now() - startTime;
-    
-    // Log success
-    console.log(`[Abacus API] Successfully processed prompt in ${processingTime}ms`);
-    
-    // Return successful response
-    res.status(200).json({
-      success: true,
-      refinedPrompt,
-      metadata: {
-        originalLength: prompt.length,
-        refinedLength: refinedPrompt.length,
-        processingTimeMs: processingTime,
-        provider: 'abacus',
-        timestamp: new Date().toISOString(),
-      },
-    });
-    
-  } catch (error) {
-    const processingTime = Date.now() - startTime;
-    
-    // Log error for monitoring
-    console.error(`[Abacus API] Error:`, error.message);
-    
-    // Determine appropriate error status
-    let status = 500;
-    if (error.message.includes('Invalid') || error.message.includes('Missing')) {
-      status = 400;
-    } else if (error.message.includes('unauthorized') || error.message.includes('authentication')) {
-      status = 401;
-    } else if (error.message.includes('rate limit') || error.message.includes('quota')) {
-      status = 429;
+    if (!inputPrompt) {
+      return res.status(400).json({ error: 'Input prompt is required' });
     }
+
+    console.log('Received prompt:', inputPrompt);
     
-    // Return error response
-    res.status(status).json({
-      success: false,
-      error: error.message,
-      metadata: {
-        processingTimeMs: processingTime,
-        provider: 'abacus',
-        timestamp: new Date().toISOString(),
-      },
+    const refinedPrompt = await refinePrompt(inputPrompt);
+    
+    console.log('Refined prompt:', refinedPrompt);
+    
+    res.status(200).json({ 
+      success: true,
+      refinedPrompt: refinedPrompt 
+    });
+  } catch (error) {
+    console.error('Error in abacus API:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
     });
   }
 }

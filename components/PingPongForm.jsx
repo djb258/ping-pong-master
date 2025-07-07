@@ -6,16 +6,16 @@
  */
 
 import { useState, useCallback } from 'react';
-import { refinePrompt, LLMProviders } from '../utils/refinePrompt';
+import { refinePrompt } from '../utils/refinePrompt';
 
 /**
  * Create clean STAMPED/SPVPET/STACKED compliant export entry
  */
-const createCleanExportEntry = (ping, pong, metadata) => ({
+const createCleanExportEntry = (ping, pong, source = 'Abacus') => ({
   ping: ping,
   pong: pong,
   refinement_notes: "",
-  source: metadata.provider === 'abacus' ? 'Abacus' : metadata.provider.charAt(0).toUpperCase() + metadata.provider.slice(1),
+  source: source,
   timestamp: new Date().toISOString(),
 });
 
@@ -42,23 +42,23 @@ export default function PingPongForm() {
     setIsClarifyingQuestion(false);
 
     try {
-      const result = await refinePrompt(pingInput, LLMProviders.ABACUS);
+      const refinedPrompt = await refinePrompt(pingInput);
       
       // Check if the response is a clarifying question
-      const isQuestion = result.refinedPrompt.toLowerCase().includes('clarifying') || 
-                        result.refinedPrompt.toLowerCase().includes('question') ||
-                        result.refinedPrompt.includes('?') && (result.refinedPrompt.includes('what') || result.refinedPrompt.includes('how') || result.refinedPrompt.includes('which') || result.refinedPrompt.includes('when') || result.refinedPrompt.includes('where') || result.refinedPrompt.includes('why'));
+      const isQuestion = refinedPrompt.toLowerCase().includes('clarifying') || 
+                        refinedPrompt.toLowerCase().includes('question') ||
+                        refinedPrompt.includes('?') && (refinedPrompt.includes('what') || refinedPrompt.includes('how') || refinedPrompt.includes('which') || refinedPrompt.includes('when') || refinedPrompt.includes('where') || refinedPrompt.includes('why'));
       
       setIsClarifyingQuestion(isQuestion);
       
       // Update current pong display
-      setCurrentPong(result.refinedPrompt);
+      setCurrentPong(refinedPrompt);
       
       // Create clean export entry
       const exportEntry = createCleanExportEntry(
         pingInput,
-        result.refinedPrompt,
-        result.metadata
+        refinedPrompt,
+        'Abacus'
       );
 
       setPingPongHistory(prev => [...prev, exportEntry]);

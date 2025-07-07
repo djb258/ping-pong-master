@@ -34,8 +34,8 @@ Your task is to help the user improve their prompt for a large language model (L
   try {
     console.log('Testing Abacus API with prompt:', prompt);
     
-    // Try the chatLLM endpoint
-    const response = await fetch('https://api.abacus.ai/api/v0/chatLLM', {
+    // Try the correct Abacus endpoint
+    const response = await fetch('https://api.abacus.ai/api/v0/chat', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -49,6 +49,7 @@ Your task is to help the user improve their prompt for a large language model (L
         llmName: 'gpt-4o',
         maxTokens: 1000,
         temperature: 0.7,
+        stream: false
       }),
     });
 

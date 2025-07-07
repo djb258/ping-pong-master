@@ -40,12 +40,25 @@ export default async function handler(req, res) {
     // Get OpenAI API key from environment
     const openaiApiKey = process.env.OPENAI_API_KEY || process.env.GPT4_API_KEY;
     
+    // Debug logging for Vercel
+    console.log('Environment check:', {
+      hasOpenAIKey: !!process.env.OPENAI_API_KEY,
+      hasGPT4Key: !!process.env.GPT4_API_KEY,
+      nodeEnv: process.env.NODE_ENV,
+      vercelEnv: process.env.VERCEL_ENV
+    });
+    
     if (!openaiApiKey) {
       console.error('No OpenAI API key found');
       return res.status(500).json({ 
         error: 'OpenAI API key not configured',
         fallback: generateFallbackResponse(prompt),
-        note: 'Add OPENAI_API_KEY to your .env.local file'
+        note: 'Add OPENAI_API_KEY to your .env.local file',
+        debug: {
+          hasOpenAIKey: !!process.env.OPENAI_API_KEY,
+          hasGPT4Key: !!process.env.GPT4_API_KEY,
+          nodeEnv: process.env.NODE_ENV
+        }
       });
     }
 

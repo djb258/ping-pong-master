@@ -2,29 +2,33 @@
  * Main Application Page
  * 
  * Entry point for the Ping-Pong Prompt application.
- * Follows Barton Doctrine: simple, focused, and properly structured.
+ * Now includes both original and altitude-based refinement modes.
  */
 
+import { useState } from 'react';
 import Head from 'next/head';
 import PingPongForm from '../components/PingPongForm';
+import AltitudePingPongForm from '../components/AltitudePingPongForm';
 
 export default function Home() {
+  const [activeTab, setActiveTab] = useState('altitude'); // Default to altitude mode
+
   return (
     <>
       <Head>
         <title>Ping-Pong Prompt App</title>
         <meta 
           name="description" 
-          content="AI-powered prompt refinement tool with ping-pong interactions. Refine your prompts using advanced language models." 
+          content="AI-powered prompt refinement tool with ping-pong interactions and altitude-based logic. Refine your prompts using advanced language models." 
         />
-        <meta name="keywords" content="AI, prompt engineering, LLM, refinement, ping-pong" />
+        <meta name="keywords" content="AI, prompt engineering, LLM, refinement, ping-pong, altitude-based" />
         <meta name="author" content="Ping-Pong Prompt App" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         
         {/* Open Graph / Social Media */}
         <meta property="og:type" content="website" />
         <meta property="og:title" content="Ping-Pong Prompt App" />
-        <meta property="og:description" content="AI-powered prompt refinement tool with ping-pong interactions" />
+        <meta property="og:description" content="AI-powered prompt refinement tool with ping-pong interactions and altitude-based logic" />
         <meta property="og:site_name" content="Ping-Pong Prompt App" />
         
         {/* Favicon and icons */}
@@ -40,7 +44,60 @@ export default function Home() {
       </Head>
 
       <main>
-        <PingPongForm />
+        {/* Tab Navigation */}
+        <div style={{
+          maxWidth: '1400px',
+          margin: '0 auto',
+          padding: '20px 20px 0 20px'
+        }}>
+          <div style={{
+            display: 'flex',
+            gap: '10px',
+            marginBottom: '20px',
+            borderBottom: '2px solid #e1e5e9',
+            paddingBottom: '10px'
+          }}>
+            <button
+              onClick={() => setActiveTab('altitude')}
+              style={{
+                padding: '12px 24px',
+                border: 'none',
+                borderRadius: '8px 8px 0 0',
+                background: activeTab === 'altitude' ? '#667eea' : '#f8f9fa',
+                color: activeTab === 'altitude' ? 'white' : '#333',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                fontSize: '1rem'
+              }}
+            >
+              🚀 Altitude-Based Refinement
+            </button>
+            <button
+              onClick={() => setActiveTab('original')}
+              style={{
+                padding: '12px 24px',
+                border: 'none',
+                borderRadius: '8px 8px 0 0',
+                background: activeTab === 'original' ? '#667eea' : '#f8f9fa',
+                color: activeTab === 'original' ? 'white' : '#333',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                fontSize: '1rem'
+              }}
+            >
+              🔄 Original Ping-Pong
+            </button>
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'altitude' ? (
+          <AltitudePingPongForm />
+        ) : (
+          <PingPongForm />
+        )}
       </main>
     </>
   );

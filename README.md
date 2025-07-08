@@ -1,6 +1,6 @@
 # Ping-Pong Prompt App
 
-A Next.js + React application for AI-powered prompt refinement with ping-pong interactions, built following **Barton Doctrine** principles.
+A Next.js + React application for AI-powered prompt refinement with ping-pong interactions and **altitude-based logic**, built following **Barton Doctrine** principles.
 
 ## 🎯 Purpose
 
@@ -10,16 +10,55 @@ The Ping-Pong Prompt App allows users to:
 - Display the returned "pong" (refined output)
 - Maintain a complete history of ping-pong exchanges
 - Export session data as STAMPED/SPVPET/STACKED compliant JSON
+- **NEW**: Use altitude-based refinement (30k→20k→10k→5k) with tree growth
+- **NEW**: Track readiness status (red/yellow/green) for prompt quality
+- **NEW**: Build idea trees with automatic branch extraction
+- **NEW**: Support direction changes with tree pruning
+
+## 🚀 Altitude-Based Refinement
+
+The app now features **altitude-based prompt logic** that guides users through progressive refinement:
+
+### Altitude Levels
+- **30k ft (Vision)**: High-level user vision and goals
+- **20k ft (Category)**: Broad category or domain  
+- **10k ft (Specialization)**: Specific specialization within category
+- **5k ft (Execution)**: Specific execution details and implementation
+
+### Key Features
+- **Readiness Status**: Real-time assessment of prompt quality
+  - 🔴 Red: Too vague, needs more specificity
+  - 🟡 Yellow: Improving but could be more specific  
+  - 🟢 Green: Specific and actionable
+- **Idea Tree Growth**: Automatic extraction of tree branches on each refinement
+- **Direction Changes**: Prune branches when user changes direction
+- **Structured Output**: Final export includes core idea, branches, and readiness status
+
+### Example Output
+```json
+{
+  "core_idea": "Become a Life & Health advisor",
+  "branches": [
+    { "label": "Market", "value": "Individual", "altitude": "10k" },
+    { "label": "Focus", "value": "Stop-loss", "altitude": "7k" },
+    { "label": "Product Type", "value": "Level-funded", "altitude": "5k" }
+  ],
+  "readiness_status": "green"
+}
+```
 
 ## 🏗️ Architecture (Barton Doctrine)
 
 This application follows Barton Doctrine principles:
 
 ### **Separation of Concerns**
-- `/components/PingPongForm.jsx` → UI and state management
-- `/utils/refinePrompt.js` → LLM abstraction and provider management
-- `/pages/api/abacus.js` → API endpoint for Abacus integration
-- `/pages/index.js` → Application entry point
+- `/components/PingPongForm.jsx` → Original UI and state management
+- `/components/AltitudePingPongForm.jsx` → Enhanced altitude-based UI
+- `/utils/refinePrompt.js` → Original LLM abstraction
+- `/utils/altitudePromptRefiner.js` → Altitude-based refinement logic
+- `/pages/api/refine-prompt.js` → Original refinement endpoint
+- `/pages/api/refine-prompt-altitude.js` → Altitude-based endpoint
+- `/pages/index.js` → Application entry point with tab interface
 
 ### **Provider Abstraction**
 The LLM integration is fully abstracted, allowing easy swapping between providers:
@@ -63,15 +102,23 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ```
 ping-pong-prompt-app/
 ├── components/
-│   └── PingPongForm.jsx      # Main UI component
+│   ├── PingPongForm.jsx           # Original UI component
+│   └── AltitudePingPongForm.jsx   # Enhanced altitude-based UI
 ├── pages/
 │   ├── api/
-│   │   └── abacus.js         # Abacus API endpoint
-│   └── index.js              # Application entry point
+│   │   ├── abacus.js              # Abacus API endpoint
+│   │   ├── refine-prompt.js       # Original refinement endpoint
+│   │   └── refine-prompt-altitude.js # Altitude-based endpoint
+│   ├── index.js                   # Application entry point
+│   └── test-altitude.js           # Test page for altitude functionality
 ├── styles/
-│   └── PingPongForm.module.css # Component styles
+│   ├── PingPongForm.module.css    # Original component styles
+│   └── AltitudePingPongForm.module.css # Enhanced component styles
 ├── utils/
-│   └── refinePrompt.js       # LLM provider abstraction
+│   ├── refinePrompt.js            # Original LLM provider abstraction
+│   └── altitudePromptRefiner.js   # Altitude-based refinement logic
+├── promptTemplates/
+│   └── pingPongTemplate.json      # Altitude configuration template
 ├── package.json
 ├── next.config.js
 └── README.md
@@ -148,6 +195,10 @@ export default async function handler(req, res) {
 - ✅ Provider selection (Abacus/GPT-4/Claude)
 - ✅ Session statistics tracking
 - ✅ JSON export functionality
+- ✅ **Altitude-based refinement logic**
+- ✅ **Readiness status tracking**
+- ✅ **Idea tree growth and visualization**
+- ✅ **Direction change support with tree pruning**
 
 ### UI/UX Features
 - ✅ Modern, responsive design
@@ -155,6 +206,10 @@ export default async function handler(req, res) {
 - ✅ Loading states and error handling
 - ✅ Mobile-optimized interface
 - ✅ High contrast mode support
+- ✅ **Tab interface for switching between modes**
+- ✅ **Visual readiness indicators**
+- ✅ **Interactive idea tree display**
+- ✅ **Altitude level visualization**
 
 ### Data Management
 - ✅ STAMPED/SPVPET/STACKED schema compliance
@@ -162,122 +217,84 @@ export default async function handler(req, res) {
 - ✅ Processing time metrics
 - ✅ Word/character count analytics
 - ✅ Provider provenance tracking
+- ✅ **Altitude progression tracking**
+- ✅ **Tree branch extraction and management**
+- ✅ **Readiness assessment algorithms**
 
 ## 📊 Export Schema
 
-The application exports data in STAMPED/SPVPET/STACKED format:
+The application exports data in STAMPED/SPVPET/STACKED format with enhanced altitude data:
 
 ```json
 {
-  "meta": {
-    "exportTimestamp": "2024-01-01T00:00:00.000Z",
-    "exportVersion": "1.0.0",
-    "schema": "STAMPED/SPVPET/STACKED",
-    "sessionId": "session-1234567890-abc123",
-    "totalExchanges": 5
-  },
-  "exchanges": [
-    {
-      "id": "ping-pong-1234567890-abc123",
-      "timestamp": "2024-01-01T00:00:00.000Z",
-      "type": "ping-pong-exchange",
-      "structured": {
-        "ping": {
-          "content": "Original prompt",
-          "timestamp": "2024-01-01T00:00:00.000Z",
-          "characterCount": 100,
-          "wordCount": 20
-        },
-        "pong": {
-          "content": "Refined prompt",
-          "timestamp": "2024-01-01T00:00:01.000Z",
-          "characterCount": 250,
-          "wordCount": 50,
-          "provider": "abacus",
-          "processingTimeMs": 1500
-        }
-      },
-      "provenance": {
-        "source": "ping-pong-prompt-app",
-        "version": "1.0.0",
-        "refinementEngine": "abacus",
-        "processingMetadata": { /* ... */ }
-      },
-      "actionable": {
-        "canRefine": true,
-        "canExport": true,
-        "canShare": true
-      },
-      "contextual": {
-        "sessionId": "session-1234567890-abc123",
-        "exchangeIndex": 0
-      }
-    }
+  "core_idea": "Become a Life & Health advisor",
+  "branches": [
+    { "label": "Market", "value": "Individual", "altitude": "10k" },
+    { "label": "Focus", "value": "Stop-loss", "altitude": "7k" },
+    { "label": "Product Type", "value": "Level-funded", "altitude": "5k" }
   ],
-  "summary": {
-    "totalCharactersProcessed": 1750,
-    "averageProcessingTime": 1250,
-    "providersUsed": ["abacus"]
-  }
+  "readiness_status": "green",
+  "refinement_history": [
+    {
+      "ping": "I want to start a business",
+      "pong": "Refined prompt with specific details...",
+      "current_altitude": "30k",
+      "new_altitude": "20k", 
+      "readiness_status": "yellow",
+      "idea_tree": [...],
+      "new_branches": [...],
+      "source": "Altitude-Based Refiner",
+      "timestamp": "2024-01-01T00:00:00.000Z"
+    }
+  ]
 }
 ```
 
-## 🧪 Development
+## 🧪 Testing
 
-### Code Style
-The application follows Barton Doctrine principles:
-- **Single Responsibility**: Each component has one clear purpose
-- **Separation of Concerns**: UI, logic, and data are properly separated
-- **Provider Abstraction**: Easy to swap LLM providers
-- **Schema Compliance**: All data follows established standards
+### Test Altitude Functionality
+Visit `/test-altitude` to test the altitude-based refinement system:
 
-### Error Handling
-- Input validation on all user inputs
-- Graceful fallbacks for API failures
-- User-friendly error messages
-- Proper HTTP status codes
-
-### Performance
-- Memoized components and calculations
-- Efficient state management
-- Optimized bundle size
-- Responsive design patterns
-
-## 🚀 Deployment
-
-### Vercel (Recommended)
 ```bash
-npm run build
-# Deploy to Vercel
+# Start the development server
+npm run dev
+
+# Navigate to test page
+open http://localhost:3000/test-altitude
 ```
 
-### Docker
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY . .
-RUN npm run build
-EXPOSE 3000
-CMD ["npm", "start"]
-```
+### Manual Testing
+1. Start with a vague idea: "I want to start a business"
+2. Watch the altitude progress from 30k → 20k → 10k → 5k
+3. Observe readiness status changes from red → yellow → green
+4. See the idea tree grow with each refinement
+5. Try the "Change Direction" button to test tree pruning
 
-## 📝 License
+## 🔄 Usage Modes
 
-MIT License - see LICENSE file for details.
+The app now supports two modes accessible via tabs:
+
+### 🚀 Altitude-Based Refinement (Default)
+- Progressive refinement through altitude levels
+- Real-time readiness assessment
+- Interactive idea tree visualization
+- Direction change support
+- Enhanced export with structured data
+
+### 🔄 Original Ping-Pong
+- Classic ping-pong refinement
+- Simple prompt improvement
+- Basic export functionality
+- Compatible with existing workflows
 
 ## 🤝 Contributing
 
-1. Follow Barton Doctrine principles
-2. Maintain STAMPED/SPVPET/STACKED compliance
-3. Add tests for new providers
-4. Update documentation
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-## 📞 Support
+## 📄 License
 
-For questions or issues, please create a GitHub issue with:
-- Environment details
-- Steps to reproduce
-- Expected vs actual behavior
-- Console logs (if applicable) 
+This project is licensed under the MIT License - see the LICENSE file for details. 

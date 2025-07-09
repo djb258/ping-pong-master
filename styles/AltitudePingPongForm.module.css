@@ -48,6 +48,62 @@
   gap: 20px;
 }
 
+/* ALTIMAP Acronym Styles */
+.altimapContainer {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e1e5e9;
+}
+
+.altimapContainer h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 1.2rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.altimapTable {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+}
+
+.altimapRow {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.altimapRow:last-child {
+  border-bottom: none;
+}
+
+.altimapLetter {
+  font-weight: bold;
+  color: #667eea;
+  font-size: 1.1rem;
+  width: 20px;
+  margin-right: 8px;
+}
+
+.altimapWord {
+  font-weight: 500;
+  color: #333;
+  flex: 1;
+  margin-right: 10px;
+}
+
+.altimapDesc {
+  color: #666;
+  font-size: 0.8rem;
+  font-style: italic;
+  text-align: right;
+  flex: 1;
+}
+
 /* Status Panel */
 .statusPanel {
   background: white;

@@ -9,7 +9,7 @@ import React, { useState, useEffect } from 'react';
 import styles from '../styles/AltitudePingPongForm.module.css';
 import { useChecklistState } from '../utils/useChecklistState.js';
 import ChecklistGuardrail from './ChecklistGuardrail.jsx';
-import ModeSelector from './ModeSelector.jsx';
+
 import { checkForDrift, validateAltitudeDependencies, generateAltitudeSummary } from '../utils/driftDetector.js';
 
 const AltitudePingPongForm = () => {
@@ -19,7 +19,7 @@ const AltitudePingPongForm = () => {
   const [selectedTemplate] = useState(process.env.NEXT_PUBLIC_DEFAULT_TEMPLATE || 'career'); // Fixed template, configured via env vars
   const [userResponses, setUserResponses] = useState({});
   const [showChecklist, setShowChecklist] = useState(true);
-  const [selectedMode, setSelectedMode] = useState('blueprint_logic');
+
   const [altitudeSummaries, setAltitudeSummaries] = useState({});
   const [driftAnalysis, setDriftAnalysis] = useState({});
   const [dependencyViolations, setDependencyViolations] = useState({});
@@ -255,7 +255,7 @@ const AltitudePingPongForm = () => {
     currentBlock?.altitude,
     currentBlock?.prompt || '',
     blocks.map(b => ({ value: b.prompt, altitude: b.altitude })),
-    selectedMode
+    'blueprint_logic' // Default mode
   );
 
   // Check if promotion is ready
@@ -265,8 +265,229 @@ const AltitudePingPongForm = () => {
     <div className={styles.container}>
       <div className={styles.leftPanel}>
         <div className={styles.header}>
-          <h1>Altitude-Based Prompt Refinement</h1>
+          <h1>ALTIMAP Framework</h1>
           <p>Work within each block to refine your idea through altitude levels</p>
+          
+          {/* ALTIMAP Framework Display */}
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '8px',
+            padding: '15px',
+            marginTop: '15px',
+            marginBottom: '15px'
+          }}>
+            <h3 style={{ 
+              margin: '0 0 15px 0', 
+              fontSize: '1.1rem',
+              textAlign: 'center'
+            }}>
+              🗺️ What ALTIMAP Stands For
+            </h3>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'flex-start',
+              gap: '8px',
+              flexWrap: 'wrap',
+              fontFamily: 'monospace'
+            }}>
+              {/* A - Altitude */}
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center',
+                background: 'rgba(255, 255, 255, 0.15)',
+                padding: '12px 6px',
+                borderRadius: '6px',
+                minWidth: '50px'
+              }}>
+                <div style={{ 
+                  fontSize: '2rem', 
+                  fontWeight: 'bold',
+                  color: '#fff',
+                  marginBottom: '8px'
+                }}>A</div>
+                <div style={{ 
+                  fontSize: '0.65rem', 
+                  textAlign: 'center',
+                  lineHeight: '1.1',
+                  writingMode: 'vertical-rl',
+                  textOrientation: 'mixed',
+                  height: '60px',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}>Altitude</div>
+              </div>
+              
+              {/* L - Logic */}
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center',
+                background: 'rgba(255, 255, 255, 0.15)',
+                padding: '12px 6px',
+                borderRadius: '6px',
+                minWidth: '50px'
+              }}>
+                <div style={{ 
+                  fontSize: '2rem', 
+                  fontWeight: 'bold',
+                  color: '#fff',
+                  marginBottom: '8px'
+                }}>L</div>
+                <div style={{ 
+                  fontSize: '0.65rem', 
+                  textAlign: 'center',
+                  lineHeight: '1.1',
+                  writingMode: 'vertical-rl',
+                  textOrientation: 'mixed',
+                  height: '60px',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}>Logic</div>
+              </div>
+              
+              {/* T - Tracking */}
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center',
+                background: 'rgba(255, 255, 255, 0.15)',
+                padding: '12px 6px',
+                borderRadius: '6px',
+                minWidth: '50px'
+              }}>
+                <div style={{ 
+                  fontSize: '2rem', 
+                  fontWeight: 'bold',
+                  color: '#fff',
+                  marginBottom: '8px'
+                }}>T</div>
+                <div style={{ 
+                  fontSize: '0.65rem', 
+                  textAlign: 'center',
+                  lineHeight: '1.1',
+                  writingMode: 'vertical-rl',
+                  textOrientation: 'mixed',
+                  height: '60px',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}>Tracking</div>
+              </div>
+              
+              {/* I - Initiatives */}
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center',
+                background: 'rgba(255, 255, 255, 0.15)',
+                padding: '12px 6px',
+                borderRadius: '6px',
+                minWidth: '50px'
+              }}>
+                <div style={{ 
+                  fontSize: '2rem', 
+                  fontWeight: 'bold',
+                  color: '#fff',
+                  marginBottom: '8px'
+                }}>I</div>
+                <div style={{ 
+                  fontSize: '0.65rem', 
+                  textAlign: 'center',
+                  lineHeight: '1.1',
+                  writingMode: 'vertical-rl',
+                  textOrientation: 'mixed',
+                  height: '60px',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}>Initiatives</div>
+              </div>
+              
+              {/* M - Model */}
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center',
+                background: 'rgba(255, 255, 255, 0.15)',
+                padding: '12px 6px',
+                borderRadius: '6px',
+                minWidth: '50px'
+              }}>
+                <div style={{ 
+                  fontSize: '2rem', 
+                  fontWeight: 'bold',
+                  color: '#fff',
+                  marginBottom: '8px'
+                }}>M</div>
+                <div style={{ 
+                  fontSize: '0.65rem', 
+                  textAlign: 'center',
+                  lineHeight: '1.1',
+                  writingMode: 'vertical-rl',
+                  textOrientation: 'mixed',
+                  height: '60px',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}>Model</div>
+              </div>
+              
+              {/* A - Alignment */}
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center',
+                background: 'rgba(255, 255, 255, 0.15)',
+                padding: '12px 6px',
+                borderRadius: '6px',
+                minWidth: '50px'
+              }}>
+                <div style={{ 
+                  fontSize: '2rem', 
+                  fontWeight: 'bold',
+                  color: '#fff',
+                  marginBottom: '8px'
+                }}>A</div>
+                <div style={{ 
+                  fontSize: '0.65rem', 
+                  textAlign: 'center',
+                  lineHeight: '1.1',
+                  writingMode: 'vertical-rl',
+                  textOrientation: 'mixed',
+                  height: '60px',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}>Alignment</div>
+              </div>
+              
+              {/* P - Parsing */}
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center',
+                background: 'rgba(255, 255, 255, 0.15)',
+                padding: '12px 6px',
+                borderRadius: '6px',
+                minWidth: '50px'
+              }}>
+                <div style={{ 
+                  fontSize: '2rem', 
+                  fontWeight: 'bold',
+                  color: '#fff',
+                  marginBottom: '8px'
+                }}>P</div>
+                <div style={{ 
+                  fontSize: '0.65rem', 
+                  textAlign: 'center',
+                  lineHeight: '1.1',
+                  writingMode: 'vertical-rl',
+                  textOrientation: 'mixed',
+                  height: '60px',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}>Parsing</div>
+              </div>
+            </div>
+          </div>
           <div className={styles.headerControls}>
             <div className={styles.checklistToggle}>
               <button 
@@ -279,11 +500,7 @@ const AltitudePingPongForm = () => {
           </div>
         </div>
 
-        {/* Mode Selector */}
-        <ModeSelector 
-          selectedMode={selectedMode}
-          onModeChange={setSelectedMode}
-        />
+
 
 
 
@@ -548,6 +765,48 @@ const AltitudePingPongForm = () => {
       </div>
 
       <div className={styles.rightPanel}>
+        {/* ALTIMAP Acronym Display */}
+        <div className={styles.altimapContainer}>
+          <h3>🗺️ ALTIMAP Framework</h3>
+          <div className={styles.altimapTable}>
+            <div className={styles.altimapRow}>
+              <span className={styles.altimapLetter}>A</span>
+              <span className={styles.altimapWord}>ltitude</span>
+              <span className={styles.altimapDesc}>Thinking levels</span>
+            </div>
+            <div className={styles.altimapRow}>
+              <span className={styles.altimapLetter}>L</span>
+              <span className={styles.altimapWord}>evel</span>
+              <span className={styles.altimapDesc}>Progression tracking</span>
+            </div>
+            <div className={styles.altimapRow}>
+              <span className={styles.altimapLetter}>T</span>
+              <span className={styles.altimapWord}>hinking</span>
+              <span className={styles.altimapDesc}>Cognitive framework</span>
+            </div>
+            <div className={styles.altimapRow}>
+              <span className={styles.altimapLetter}>I</span>
+              <span className={styles.altimapWord}>teration</span>
+              <span className={styles.altimapDesc}>Refinement cycles</span>
+            </div>
+            <div className={styles.altimapRow}>
+              <span className={styles.altimapLetter}>M</span>
+              <span className={styles.altimapWord}>ethodology</span>
+              <span className={styles.altimapDesc}>Structured approach</span>
+            </div>
+            <div className={styles.altimapRow}>
+              <span className={styles.altimapLetter}>A</span>
+              <span className={styles.altimapWord}>ssessment</span>
+              <span className={styles.altimapDesc}>Progress evaluation</span>
+            </div>
+            <div className={styles.altimapRow}>
+              <span className={styles.altimapLetter}>P</span>
+              <span className={styles.altimapWord}>romotion</span>
+              <span className={styles.altimapDesc}>Level advancement</span>
+            </div>
+          </div>
+        </div>
+
         <div className={styles.progressContainer}>
           <h3>Altitude Journey</h3>
           <div className={styles.altitudeProgress}>

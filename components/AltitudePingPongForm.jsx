@@ -10,6 +10,7 @@ import styles from '../styles/AltitudePingPongForm.module.css';
 import { useChecklistState } from '../utils/useChecklistState.js';
 import ChecklistGuardrail from './ChecklistGuardrail.jsx';
 import ModeSelector from './ModeSelector.jsx';
+import { checkForDrift, validateAltitudeDependencies, generateAltitudeSummary } from '../utils/driftDetector.js';
 
 const AltitudePingPongForm = () => {
   const [blocks, setBlocks] = useState([]);
@@ -19,6 +20,9 @@ const AltitudePingPongForm = () => {
   const [userResponses, setUserResponses] = useState({});
   const [showChecklist, setShowChecklist] = useState(true);
   const [selectedMode, setSelectedMode] = useState('blueprint_logic');
+  const [altitudeSummaries, setAltitudeSummaries] = useState({});
+  const [driftAnalysis, setDriftAnalysis] = useState({});
+  const [dependencyViolations, setDependencyViolations] = useState({});
 
   const createNewBlock = (altitude = '30k') => {
     const newBlock = {
@@ -81,9 +85,37 @@ const AltitudePingPongForm = () => {
     }
   };
 
-  const moveToNextAltitude = (blockId) => {
+  const moveToNextAltitude = async (blockId) => {
     const block = blocks.find(b => b.id === blockId);
     if (!block) return;
+
+    // Generate summary for current altitude before moving
+    if (block.prompt || block.refinedPrompt) {
+      const contentToSummarize = block.refinedPrompt || block.prompt;
+      const summary = await generateAltitudeSummary(contentToSummarize, block.altitude);
+      
+      setAltitudeSummaries(prev => ({
+        ...prev,
+        [block.altitude]: summary
+      }));
+
+      // Check for drift if we have a previous summary
+      const previousAltitude = getPreviousAltitude(block.altitude);
+      if (previousAltitude && altitudeSummaries[previousAltitude]) {
+        const drift = checkForDrift(altitudeSummaries[previousAltitude], summary, block.altitude);
+        setDriftAnalysis(prev => ({
+          ...prev,
+          [block.altitude]: drift
+        }));
+      }
+
+      // Validate altitude dependencies
+      const validation = validateAltitudeDependencies(block.altitude, contentToSummarize);
+      setDependencyViolations(prev => ({
+        ...prev,
+        [block.altitude]: validation
+      }));
+    }
 
     const altitudeOrder = ['30k', '20k', '10k', '5k'];
     const currentIndex = altitudeOrder.indexOf(block.altitude);
@@ -106,6 +138,12 @@ const AltitudePingPongForm = () => {
       setBlocks([newBlock]);
       setCurrentBlockId(newBlock.id);
     }
+  };
+
+  const getPreviousAltitude = (currentAltitude) => {
+    const altitudeOrder = ['30k', '20k', '10k', '5k'];
+    const currentIndex = altitudeOrder.indexOf(currentAltitude);
+    return currentIndex > 0 ? altitudeOrder[currentIndex - 1] : null;
   };
 
   const refineWithResponses = async (blockId) => {
@@ -448,6 +486,49 @@ const AltitudePingPongForm = () => {
                   </div>
                 )}
                 
+                {/* Drift Analysis Display */}
+                {driftAnalysis[block.altitude] && driftAnalysis[block.altitude].hasDrift && (
+                  <div className={styles.driftWarning}>
+                    <div className={styles.driftHeader}>
+                      <span className={styles.driftIcon}>🚨</span>
+                      <span className={styles.driftTitle}>Drift Detected</span>
+                    </div>
+                    <div className={styles.driftDetails}>
+                      {driftAnalysis[block.altitude].details}
+                    </div>
+                  </div>
+                )}
+
+                {/* Dependency Violations Display */}
+                {dependencyViolations[block.altitude] && !dependencyViolations[block.altitude].isValid && (
+                  <div className={styles.dependencyWarning}>
+                    <div className={styles.dependencyHeader}>
+                      <span className={styles.dependencyIcon}>⚠️</span>
+                      <span className={styles.dependencyTitle}>Dependency Violations</span>
+                    </div>
+                    <div className={styles.dependencyDetails}>
+                      {dependencyViolations[block.altitude].violations.map((violation, index) => (
+                        <div key={index} className={styles.violation}>
+                          {violation.message}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Altitude Summary Display */}
+                {altitudeSummaries[block.altitude] && (
+                  <div className={styles.altitudeSummary}>
+                    <div className={styles.summaryHeader}>
+                      <span className={styles.summaryIcon}>📝</span>
+                      <span className={styles.summaryTitle}>Altitude Summary</span>
+                    </div>
+                    <div className={styles.summaryContent}>
+                      {altitudeSummaries[block.altitude]}
+                    </div>
+                  </div>
+                )}
+
                 <div className={styles.blockActions}>
                   <button 
                     onClick={() => moveToNextAltitude(block.id)}

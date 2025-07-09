@@ -502,4 +502,107 @@
 .nextLevelButton.disabled:hover {
   transform: none;
   box-shadow: none;
+}
+
+/* Drift Detection Styles */
+.driftWarning {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.driftHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.driftIcon {
+  font-size: 1.2rem;
+}
+
+.driftTitle {
+  font-weight: 600;
+  color: #dc2626;
+  font-size: 1rem;
+}
+
+.driftDetails {
+  color: #7f1d1d;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Dependency Validation Styles */
+.dependencyWarning {
+  background: #fffbeb;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.dependencyHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.dependencyIcon {
+  font-size: 1.2rem;
+}
+
+.dependencyTitle {
+  font-weight: 600;
+  color: #d97706;
+  font-size: 1rem;
+}
+
+.dependencyDetails {
+  color: #92400e;
+  font-size: 0.9rem;
+}
+
+.violation {
+  padding: 4px 0;
+  border-left: 3px solid #f59e0b;
+  padding-left: 8px;
+  margin: 4px 0;
+}
+
+/* Altitude Summary Styles */
+.altitudeSummary {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.summaryHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.summaryIcon {
+  font-size: 1.2rem;
+}
+
+.summaryTitle {
+  font-weight: 600;
+  color: #0369a1;
+  font-size: 1rem;
+}
+
+.summaryContent {
+  color: #0c4a6e;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  font-style: italic;
 } 

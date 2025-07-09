@@ -1,0 +1,139 @@
+{
+  "30k": {
+    "must_not_include": [
+      "tools",
+      "tech",
+      "outputs",
+      "implementation",
+      "timeline",
+      "budget",
+      "resources",
+      "specific",
+      "detailed",
+      "concrete",
+      "action",
+      "step",
+      "process"
+    ],
+    "must_include": [
+      "vision",
+      "goal",
+      "dream",
+      "aspire",
+      "achieve",
+      "become",
+      "create",
+      "build"
+    ],
+    "description": "Vision level - focus on high-level goals and aspirations, avoid implementation details"
+  },
+  "20k": {
+    "must_not_include": [
+      "implementation",
+      "timeline",
+      "budget",
+      "specific tools",
+      "detailed process",
+      "concrete actions",
+      "step-by-step"
+    ],
+    "must_include": [
+      "industry",
+      "category",
+      "domain",
+      "field",
+      "type",
+      "business",
+      "market"
+    ],
+    "description": "Category level - focus on industry and domain identification, avoid execution details"
+  },
+  "10k": {
+    "must_not_include": [
+      "timeline",
+      "budget",
+      "specific tools",
+      "implementation steps",
+      "concrete actions"
+    ],
+    "must_include": [
+      "specialization",
+      "niche",
+      "focus",
+      "specific",
+      "particular",
+      "target",
+      "segment",
+      "approach"
+    ],
+    "description": "Specialization level - focus on specific niche and approach, avoid detailed execution"
+  },
+  "5k": {
+    "must_not_include": [
+      "vision",
+      "dream",
+      "aspire",
+      "high-level",
+      "broad",
+      "general"
+    ],
+    "must_include": [
+      "plan",
+      "timeline",
+      "action",
+      "step",
+      "resource",
+      "tool",
+      "budget",
+      "schedule",
+      "specific",
+      "concrete",
+      "implementation"
+    ],
+    "description": "Execution level - focus on concrete actions and implementation details"
+  },
+  "validation_rules": {
+    "strict_mode": false,
+    "warn_on_violation": true,
+    "block_on_violation": false,
+    "suggest_alternatives": true
+  },
+  "altitude_transitions": {
+    "30k_to_20k": {
+      "expected_changes": [
+        "vision_to_category",
+        "goal_to_industry",
+        "aspiration_to_domain"
+      ],
+      "forbidden_changes": [
+        "vision_to_implementation",
+        "goal_to_tools",
+        "aspiration_to_timeline"
+      ]
+    },
+    "20k_to_10k": {
+      "expected_changes": [
+        "category_to_specialization",
+        "industry_to_niche",
+        "domain_to_focus"
+      ],
+      "forbidden_changes": [
+        "category_to_implementation",
+        "industry_to_tools",
+        "domain_to_timeline"
+      ]
+    },
+    "10k_to_5k": {
+      "expected_changes": [
+        "specialization_to_execution",
+        "niche_to_actions",
+        "focus_to_implementation"
+      ],
+      "forbidden_changes": [
+        "specialization_to_vision",
+        "niche_to_goals",
+        "focus_to_aspirations"
+      ]
+    }
+  }
+} 

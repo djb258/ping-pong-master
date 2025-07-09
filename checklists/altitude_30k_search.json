@@ -1,0 +1,58 @@
+{
+  "altitude": "30k",
+  "name": "Career Vision",
+  "description": "High-level career goals and aspirations",
+  "guardrail_profile": "search_prep",
+  "checklist_items": [
+    {
+      "id": "career_vision_clarity",
+      "label": "Clear Career Vision",
+      "description": "User has articulated a clear, specific career vision or goal",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "clarity"
+    },
+    {
+      "id": "motivation_understanding",
+      "label": "Career Motivation",
+      "description": "User understands their motivation for career change or advancement",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "motivation"
+    },
+    {
+      "id": "target_role_defined",
+      "label": "Target Role Definition",
+      "description": "User has identified the type of role they want to pursue",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "specificity"
+    },
+    {
+      "id": "success_criteria",
+      "label": "Success Criteria",
+      "description": "User has defined what success looks like in their career transition",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "measurability"
+    },
+    {
+      "id": "timeline_awareness",
+      "label": "Timeline Awareness",
+      "description": "User has considered their desired timeline for career transition",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "planning"
+    }
+  ],
+  "promotion_criteria": {
+    "required_checks": 5,
+    "minimum_llm_confidence": 0.7,
+    "user_override_allowed": true
+  }
+} 

@@ -1,523 +1,505 @@
 /* Altitude-Based Ping-Pong Form Styles */
 
 .container {
-  display: flex;
-  gap: 20px;
   max-width: 1400px;
   margin: 0 auto;
   padding: 20px;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.leftPanel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
 .header {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   text-align: center;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .header h1 {
   margin: 0 0 10px 0;
-  color: #333;
-  font-size: 24px;
+  font-size: 2.5rem;
   font-weight: 700;
 }
 
 .header p {
   margin: 0;
-  color: #666;
-  font-size: 16px;
+  font-size: 1.1rem;
+  opacity: 0.9;
 }
 
-.blocksContainer {
+.mainContent {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 30px;
+  min-height: 600px;
+}
+
+.leftPanel {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 20px;
 }
 
-.block {
+.rightPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Status Panel */
+.statusPanel {
   background: white;
+  padding: 20px;
   border-radius: 12px;
-  padding: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  border-left: 4px solid #667eea;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e1e5e9;
 }
 
-.activeBlock {
-  border-left-color: #7ED321;
-  box-shadow: 0 6px 25px rgba(126, 211, 33, 0.2);
-}
-
-.inactiveBlock {
-  opacity: 0.8;
-  border-left-color: #ccc;
-}
-
-.blockHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #e1e5e9;
-}
-
-.blockMeta {
+.readinessIndicator {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 8px;
 }
 
-.blockNumber {
-  font-weight: 700;
-  color: #667eea;
-  font-size: 16px;
-  background: #f0f4ff;
-  padding: 4px 8px;
-  border-radius: 6px;
-}
-
-.altitudeBadge {
-  padding: 6px 12px;
-  border-radius: 20px;
-  color: white;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.readinessDot {
+.statusDot {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  border: 2px solid white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.iterationCount {
-  font-size: 12px;
+.statusText {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.altitudeText {
   color: #666;
-  background: #f5f5f5;
-  padding: 4px 8px;
-  border-radius: 12px;
+  font-size: 0.9rem;
 }
 
-.blockActions {
-  display: flex;
-  justify-content: center;
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px solid #e1e5e9;
-}
-
-.refineButton {
-  padding: 10px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  width: 100%;
-  margin-top: 6px;
-}
-
-.refineButton:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.refineButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.nextLevelButton {
-  padding: 8px 16px;
-  background: linear-gradient(135deg, #7ED321 0%, #50C878 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.nextLevelButton:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(126, 211, 33, 0.4);
-}
-
-.nextLevelButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.blockContent {
+.altitudeDisplay {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.inputSection,
-.outputSection,
-.contextSection,
-.questionsSection {
+.altitudeInfo {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.inputSection label,
-.outputSection label,
-.contextSection label,
-.questionsSection label {
-  font-weight: 600;
-  color: #333;
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.promptInput {
-  width: 100%;
-  padding: 10px;
-  border: 2px solid #e1e5e9;
-  border-radius: 8px;
-  font-size: 14px;
-  font-family: inherit;
-  resize: vertical;
-  transition: border-color 0.2s ease;
-  min-height: 50px;
-}
-
-.promptInput:focus {
-  outline: none;
-  border-color: #667eea;
-}
-
-.refinedDisplay {
-  background: #f8f9fa;
-  border: 1px solid #e1e5e9;
-  border-radius: 8px;
-  padding: 12px;
-  font-size: 14px;
-  line-height: 1.4;
-  color: #333;
-  margin-bottom: 8px;
-  white-space: pre-wrap;
-}
-
-.useSuggestionButton {
-  padding: 8px 16px;
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  align-self: flex-start;
-}
-
-.useSuggestionButton:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
-}
-
-.questionsList {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.questionItem {
-  display: flex;
+  justify-content: space-between;
   align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
 }
 
-.questionButton {
-  width: 100%;
-  padding: 8px 10px;
+.altitudeLabel {
+  font-weight: 500;
+  color: #555;
+}
+
+.altitudeValue {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.altitudeContext {
+  margin-top: 10px;
+  padding: 10px;
   background: #f8f9fa;
-  border: 1px solid #e1e5e9;
   border-radius: 6px;
-  font-size: 13px;
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: #333;
+  font-size: 0.9rem;
+  color: #666;
 }
 
-.questionButton:hover {
-  background: #e9ecef;
-  border-color: #667eea;
-  transform: translateX(2px);
-}
-
-.responseSection {
-  margin-top: 15px;
-  padding: 15px;
-  background: #f8f9fa;
-  border-radius: 8px;
+/* Input Form */
+.inputForm {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   border: 1px solid #e1e5e9;
 }
 
-.responseSection label {
+.inputGroup {
+  margin-bottom: 20px;
+}
+
+.inputGroup label {
   display: block;
   margin-bottom: 8px;
   font-weight: 600;
   color: #333;
-  font-size: 14px;
 }
 
-.questionsDisplay {
-  margin-bottom: 15px;
-}
-
-.questionDisplay {
-  background: #f0f4ff;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  padding: 10px;
-  margin-bottom: 8px;
-  font-size: 13px;
-  color: #374151;
-  line-height: 1.4;
-}
-
-.responseInput {
+.textarea {
   width: 100%;
-  padding: 10px;
+  padding: 15px;
   border: 2px solid #e1e5e9;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 1rem;
   font-family: inherit;
   resize: vertical;
-  transition: border-color 0.2s ease;
-  min-height: 60px;
-  margin-bottom: 10px;
+  transition: border-color 0.3s ease;
 }
 
-.responseInput:focus {
+.textarea:focus {
   outline: none;
   border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-.refineWithResponsesButton {
-  padding: 8px 16px;
+.textarea:disabled {
+  background-color: #f8f9fa;
+  color: #666;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.primaryButton {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  border-radius: 6px;
-  font-size: 13px;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-  align-self: flex-start;
+  transition: all 0.3s ease;
+  flex: 1;
+  min-width: 150px;
 }
 
-.refineWithResponsesButton:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+.primaryButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
-.refineWithResponsesButton:disabled {
+.primaryButton:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
 }
 
-.addBlockSection {
-  display: flex;
-  justify-content: center;
-  margin-top: 15px;
-  padding-top: 15px;
-  border-top: 1px solid #e1e5e9;
-}
-
-.addBlockButton {
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #F5A623 0%, #FF6B35 100%);
-  color: white;
-  border: none;
+.secondaryButton {
+  background: #f8f9fa;
+  color: #333;
+  border: 2px solid #e1e5e9;
+  padding: 12px 20px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.addBlockButton:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(245, 166, 35, 0.4);
-}
-
-.rightPanel {
-  width: 320px;
-  flex-shrink: 0;
-}
-
-.progressContainer {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  height: fit-content;
-  position: sticky;
-  top: 20px;
-}
-
-.progressContainer h3 {
-  margin: 0 0 20px 0;
-  color: #333;
-  font-size: 18px;
-  font-weight: 600;
-  text-align: center;
-}
-
-.altitudeProgress {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-.altitudeLevel {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 8px;
   transition: all 0.3s ease;
 }
 
-.altitudeLevel.completed {
-  background: #f0f8f0;
-  border-left: 4px solid #7ED321;
+.secondaryButton:hover:not(:disabled) {
+  background: #e9ecef;
+  border-color: #adb5bd;
 }
 
-.altitudeLevel.current {
-  background: #f0f4ff;
-  border-left: 4px solid #667eea;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+.secondaryButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
-.altitudeLevel.upcoming {
-  background: #f8f9fa;
-  border-left: 4px solid #ccc;
-  opacity: 0.7;
-}
-
-.levelIndicator {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.resetButton {
+  background: #dc3545;
   color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 1rem;
   font-weight: 600;
-  font-size: 14px;
-  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.levelInfo {
+.resetButton:hover:not(:disabled) {
+  background: #c82333;
+  transform: translateY(-1px);
+}
+
+.resetButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Suggested Questions */
+.suggestedQuestions {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e1e5e9;
+}
+
+.suggestedQuestions h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 1.2rem;
+}
+
+.suggestedQuestions ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.suggestedQuestions li {
+  margin-bottom: 8px;
+  color: #555;
+  line-height: 1.5;
+}
+
+/* Current Response */
+.currentResponse {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e1e5e9;
+}
+
+.currentResponse h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 1.2rem;
+}
+
+.responseContent {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+  line-height: 1.6;
+  color: #333;
+  white-space: pre-wrap;
+}
+
+/* Idea Tree */
+.ideaTree {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e1e5e9;
+}
+
+.ideaTree h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 1.2rem;
+}
+
+.emptyTree {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+  font-style: italic;
+}
+
+.treeContainer {
   display: flex;
   flex-direction: column;
-  flex: 1;
+  gap: 10px;
 }
 
-.levelName {
+.treeBranch {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 10px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e1e5e9;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.treeBranch:hover {
+  background: #e9ecef;
+  transform: translateX(5px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.branchLabel {
   font-weight: 600;
   color: #333;
-  font-size: 14px;
+  font-size: 0.9rem;
 }
 
-.levelAltitude {
-  font-size: 12px;
-  color: #666;
+.branchValue {
+  color: #555;
+  font-size: 0.9rem;
 }
 
-.levelStatus {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: #666;
-}
-
-.statusDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.progressStats {
+.branchAltitude {
+  background: #667eea;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
   text-align: center;
-  padding-top: 15px;
-  border-top: 1px solid #e1e5e9;
+  min-width: 40px;
 }
 
-.progressStats p {
-  margin: 5px 0;
-  font-size: 13px;
-  color: #666;
+/* Export Section */
+.exportSection {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e1e5e9;
 }
 
-.progressStats p:first-child {
-  font-weight: 600;
+.exportSection h3 {
+  margin: 0 0 15px 0;
   color: #333;
-  font-size: 14px;
+  font-size: 1.2rem;
+}
+
+.exportButton {
+  width: 100%;
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 10px;
+}
+
+.exportButton:hover:not(:disabled) {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+.exportButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.exportInfo {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.4;
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
-  .container {
-    flex-direction: column;
-    padding: 10px;
+@media (max-width: 1024px) {
+  .mainContent {
+    grid-template-columns: 1fr;
   }
   
   .rightPanel {
-    width: 100%;
+    order: -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
   }
   
-  .progressContainer {
-    position: static;
+  .header h1 {
+    font-size: 2rem;
   }
   
-  .blockHeader {
+  .buttonGroup {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
   }
   
-  .blockActions {
-    width: 100%;
-    justify-content: space-between;
+  .treeBranch {
+    grid-template-columns: 1fr;
+    gap: 5px;
   }
   
-  .blockMeta {
-    width: 100%;
-    justify-content: space-between;
+  .branchAltitude {
+    justify-self: start;
   }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 15px;
+  }
+  
+  .header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .header p {
+    font-size: 1rem;
+  }
+  
+  .inputForm {
+    padding: 15px;
+  }
+  
+  .ideaTree,
+  .exportSection,
+  .suggestedQuestions,
+  .currentResponse {
+    padding: 15px;
+  }
+}
+
+/* New header controls styles */
+.headerControls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.checklistToggle {
+  display: flex;
+  align-items: center;
+}
+
+.toggleButton {
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  backdrop-filter: blur(10px);
+}
+
+.toggleButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Disabled button styles */
+.nextLevelButton.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #95a5a6;
+  border-color: #95a5a6;
+}
+
+.nextLevelButton.disabled:hover {
+  transform: none;
+  box-shadow: none;
 } 

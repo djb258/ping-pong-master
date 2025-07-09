@@ -1,0 +1,67 @@
+{
+  "altitude": "20k",
+  "name": "Category",
+  "description": "Broad category or domain",
+  "guardrail_profile": "blueprint_logic",
+  "checklist_items": [
+    {
+      "id": "industry_identified",
+      "label": "Industry Identification",
+      "description": "User has identified the specific industry or sector",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "specificity"
+    },
+    {
+      "id": "business_type_clear",
+      "label": "Business Type Clarity",
+      "description": "Type of business or activity is clearly defined",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "clarity"
+    },
+    {
+      "id": "domain_expertise",
+      "label": "Domain Expertise Required",
+      "description": "Required domain expertise and knowledge areas are identified",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "expertise"
+    },
+    {
+      "id": "market_understanding",
+      "label": "Market Understanding",
+      "description": "Basic market dynamics and landscape are understood",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "knowledge"
+    },
+    {
+      "id": "competitive_landscape",
+      "label": "Competitive Landscape",
+      "description": "Key competitors and market positioning are considered",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "analysis"
+    },
+    {
+      "id": "regulatory_awareness",
+      "label": "Regulatory Awareness",
+      "description": "Basic regulatory requirements and compliance needs are identified",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "compliance"
+    }
+  ],
+  "promotion_criteria": {
+    "required_checks": 6,
+    "minimum_llm_confidence": 0.7,
+    "user_override_allowed": true
+  }
+} 

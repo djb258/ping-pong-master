@@ -1,0 +1,76 @@
+{
+  "altitude": "10k",
+  "name": "Specialization",
+  "description": "Specific specialization within category",
+  "guardrail_profile": "blueprint_logic",
+  "checklist_items": [
+    {
+      "id": "niche_defined",
+      "label": "Niche Definition",
+      "description": "Specific niche or specialization is clearly defined",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "specificity"
+    },
+    {
+      "id": "unique_angle",
+      "label": "Unique Angle",
+      "description": "Unique approach or differentiation strategy is identified",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "differentiation"
+    },
+    {
+      "id": "target_segment",
+      "label": "Target Segment",
+      "description": "Specific target market segment is clearly defined",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "targeting"
+    },
+    {
+      "id": "value_proposition",
+      "label": "Value Proposition",
+      "description": "Clear value proposition for the target segment",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "value"
+    },
+    {
+      "id": "competitive_advantage",
+      "label": "Competitive Advantage",
+      "description": "Sustainable competitive advantage is identified",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "advantage"
+    },
+    {
+      "id": "market_validation",
+      "label": "Market Validation",
+      "description": "Evidence of market demand or validation exists",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "validation"
+    },
+    {
+      "id": "resource_requirements",
+      "label": "Resource Requirements",
+      "description": "Key resource requirements are identified",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "resources"
+    }
+  ],
+  "promotion_criteria": {
+    "required_checks": 7,
+    "minimum_llm_confidence": 0.7,
+    "user_override_allowed": true
+  }
+} 

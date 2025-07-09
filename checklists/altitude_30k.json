@@ -1,0 +1,58 @@
+{
+  "altitude": "30k",
+  "name": "Vision",
+  "description": "High-level user vision and goals",
+  "guardrail_profile": "blueprint_logic",
+  "checklist_items": [
+    {
+      "id": "vision_clarity",
+      "label": "Clear Vision Statement",
+      "description": "User has articulated a clear, specific vision or goal",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "clarity"
+    },
+    {
+      "id": "problem_identification",
+      "label": "Problem Identification",
+      "description": "User has identified the core problem they want to solve",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "clarity"
+    },
+    {
+      "id": "success_definition",
+      "label": "Success Definition",
+      "description": "User has defined what success looks like with measurable outcomes",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "measurability"
+    },
+    {
+      "id": "motivation_clear",
+      "label": "Clear Motivation",
+      "description": "User's motivation and driving force are clearly understood",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "clarity"
+    },
+    {
+      "id": "scope_appropriate",
+      "label": "Appropriate Scope",
+      "description": "Vision scope is neither too broad nor too narrow for initial planning",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "scope"
+    }
+  ],
+  "promotion_criteria": {
+    "required_checks": 5,
+    "minimum_llm_confidence": 0.7,
+    "user_override_allowed": true
+  }
+} 

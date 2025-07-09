@@ -1,0 +1,82 @@
+{
+  "mode_profiles": {
+    "blueprint_logic": {
+      "name": "Blueprint Logic",
+      "description": "Structured approach for business planning and strategy development",
+      "altitudes": {
+        "30k": "altitude_30k_blueprint.json",
+        "20k": "altitude_20k_blueprint.json", 
+        "10k": "altitude_10k_blueprint.json",
+        "5k": "altitude_5k_blueprint.json"
+      }
+    },
+    "search_prep": {
+      "name": "Search Preparation", 
+      "description": "Focused on job search, career transition, and interview preparation",
+      "altitudes": {
+        "30k": "altitude_30k_search.json",
+        "20k": "altitude_20k_search.json",
+        "10k": "altitude_10k_search.json", 
+        "5k": "altitude_5k_search.json"
+      }
+    },
+    "startup_foundation": {
+      "name": "Startup Foundation",
+      "description": "Entrepreneurial approach for building and launching new ventures",
+      "altitudes": {
+        "30k": "altitude_30k_startup.json",
+        "20k": "altitude_20k_startup.json",
+        "10k": "altitude_10k_startup.json",
+        "5k": "altitude_5k_startup.json"
+      }
+    },
+    "project_management": {
+      "name": "Project Management",
+      "description": "Structured project planning and execution methodology",
+      "altitudes": {
+        "30k": "altitude_30k_project.json",
+        "20k": "altitude_20k_project.json", 
+        "10k": "altitude_10k_project.json",
+        "5k": "altitude_5k_project.json"
+      }
+    },
+    "learning_path": {
+      "name": "Learning Path",
+      "description": "Educational journey planning and skill development",
+      "altitudes": {
+        "30k": "altitude_30k_learning.json",
+        "20k": "altitude_20k_learning.json",
+        "10k": "altitude_10k_learning.json",
+        "5k": "altitude_5k_learning.json"
+      }
+    }
+  },
+  "default_mode": "blueprint_logic",
+  "mode_metadata": {
+    "blueprint_logic": {
+      "icon": "🏗️",
+      "color": "#3498db",
+      "tags": ["business", "strategy", "planning"]
+    },
+    "search_prep": {
+      "icon": "🔍", 
+      "color": "#e74c3c",
+      "tags": ["career", "job", "interview"]
+    },
+    "startup_foundation": {
+      "icon": "🚀",
+      "color": "#f39c12", 
+      "tags": ["entrepreneur", "startup", "venture"]
+    },
+    "project_management": {
+      "icon": "📋",
+      "color": "#27ae60",
+      "tags": ["project", "management", "execution"]
+    },
+    "learning_path": {
+      "icon": "📚",
+      "color": "#9b59b6",
+      "tags": ["education", "learning", "skills"]
+    }
+  }
+} 

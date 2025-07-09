@@ -7,6 +7,9 @@
 
 import React, { useState, useEffect } from 'react';
 import styles from '../styles/AltitudePingPongForm.module.css';
+import { useChecklistState } from '../utils/useChecklistState.js';
+import ChecklistGuardrail from './ChecklistGuardrail.jsx';
+import ModeSelector from './ModeSelector.jsx';
 
 const AltitudePingPongForm = () => {
   const [blocks, setBlocks] = useState([]);
@@ -14,6 +17,8 @@ const AltitudePingPongForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedTemplate] = useState(process.env.NEXT_PUBLIC_DEFAULT_TEMPLATE || 'career'); // Fixed template, configured via env vars
   const [userResponses, setUserResponses] = useState({});
+  const [showChecklist, setShowChecklist] = useState(true);
+  const [selectedMode, setSelectedMode] = useState('blueprint_logic');
 
   const createNewBlock = (altitude = '30k') => {
     const newBlock = {
@@ -195,15 +200,65 @@ const AltitudePingPongForm = () => {
     }
   }, []);
 
+  // Get current block for checklist integration
+  const currentBlock = blocks.find(b => b.id === currentBlockId) || blocks[0];
+  
+  // Initialize checklist state for current altitude
+  const {
+    checklist,
+    loading: checklistLoading,
+    error: checklistError,
+    toggleUserCheck,
+    isPromotionReady,
+    getPromotionStatus,
+    resetUserChecks,
+    acceptAllLLMChecks
+  } = useChecklistState(
+    currentBlock?.altitude,
+    currentBlock?.prompt || '',
+    blocks.map(b => ({ value: b.prompt, altitude: b.altitude })),
+    selectedMode
+  );
+
+  // Check if promotion is ready
+  const promotionStatus = getPromotionStatus();
+
   return (
     <div className={styles.container}>
       <div className={styles.leftPanel}>
         <div className={styles.header}>
           <h1>Altitude-Based Prompt Refinement</h1>
           <p>Work within each block to refine your idea through altitude levels</p>
+          <div className={styles.headerControls}>
+            <div className={styles.checklistToggle}>
+              <button 
+                onClick={() => setShowChecklist(!showChecklist)}
+                className={styles.toggleButton}
+              >
+                {showChecklist ? '🔽 Hide Guardrails' : '🔼 Show Guardrails'}
+              </button>
+            </div>
+          </div>
         </div>
 
+        {/* Mode Selector */}
+        <ModeSelector 
+          selectedMode={selectedMode}
+          onModeChange={setSelectedMode}
+        />
 
+
+
+        {/* Guardrail Checklist */}
+        {showChecklist && currentBlock && (
+          <ChecklistGuardrail
+            checklist={checklist}
+            onToggleCheck={toggleUserCheck}
+            promotionStatus={promotionStatus}
+            onAcceptAllLLM={acceptAllLLMChecks}
+            onResetChecks={resetUserChecks}
+          />
+        )}
 
         <div className={styles.blocksContainer}>
           {blocks.map((block, index) => (
@@ -396,10 +451,11 @@ const AltitudePingPongForm = () => {
                 <div className={styles.blockActions}>
                   <button 
                     onClick={() => moveToNextAltitude(block.id)}
-                    disabled={!block.refinedPrompt.trim()}
-                    className={styles.nextLevelButton}
+                    disabled={!block.refinedPrompt.trim() || !isPromotionReady()}
+                    className={`${styles.nextLevelButton} ${!isPromotionReady() ? styles.disabled : ''}`}
                   >
-                    {block.altitude === '5k' ? '✅ Execution Complete' : 'Next Level'}
+                    {block.altitude === '5k' ? '✅ Execution Complete' : 
+                     isPromotionReady() ? 'Next Level' : `Complete Guardrails (${promotionStatus.checked}/${promotionStatus.required})`}
                   </button>
                 </div>
               </div>

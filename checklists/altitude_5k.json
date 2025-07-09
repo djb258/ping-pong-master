@@ -1,0 +1,85 @@
+{
+  "altitude": "5k",
+  "name": "Execution",
+  "description": "Specific execution details and implementation",
+  "guardrail_profile": "blueprint_logic",
+  "checklist_items": [
+    {
+      "id": "action_plan",
+      "label": "Action Plan",
+      "description": "Specific, actionable steps are defined",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "planning"
+    },
+    {
+      "id": "timeline_defined",
+      "label": "Timeline Defined",
+      "description": "Realistic timeline with milestones is established",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "timeline"
+    },
+    {
+      "id": "resource_allocation",
+      "label": "Resource Allocation",
+      "description": "Required resources and tools are identified and allocated",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "resources"
+    },
+    {
+      "id": "budget_planning",
+      "label": "Budget Planning",
+      "description": "Financial requirements and budget are planned",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "finance"
+    },
+    {
+      "id": "risk_assessment",
+      "label": "Risk Assessment",
+      "description": "Key risks and mitigation strategies are identified",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "risk"
+    },
+    {
+      "id": "success_metrics",
+      "label": "Success Metrics",
+      "description": "Clear success metrics and KPIs are defined",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "metrics"
+    },
+    {
+      "id": "team_requirements",
+      "label": "Team Requirements",
+      "description": "Team composition and roles are defined",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "team"
+    },
+    {
+      "id": "implementation_ready",
+      "label": "Implementation Ready",
+      "description": "All prerequisites for implementation are met",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "readiness"
+    }
+  ],
+  "promotion_criteria": {
+    "required_checks": 8,
+    "minimum_llm_confidence": 0.8,
+    "user_override_allowed": true
+  }
+} 

@@ -1,0 +1,58 @@
+{
+  "altitude": "30k",
+  "name": "Startup Vision",
+  "description": "High-level startup vision and market opportunity",
+  "guardrail_profile": "startup_foundation",
+  "checklist_items": [
+    {
+      "id": "startup_vision_clarity",
+      "label": "Clear Startup Vision",
+      "description": "User has articulated a clear, compelling startup vision",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "clarity"
+    },
+    {
+      "id": "market_opportunity",
+      "label": "Market Opportunity",
+      "description": "User has identified a significant market opportunity or problem",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "opportunity"
+    },
+    {
+      "id": "founder_motivation",
+      "label": "Founder Motivation",
+      "description": "User has strong personal motivation and commitment to the idea",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "motivation"
+    },
+    {
+      "id": "unique_insight",
+      "label": "Unique Insight",
+      "description": "User has a unique insight or approach to the problem",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "differentiation"
+    },
+    {
+      "id": "scalability_potential",
+      "label": "Scalability Potential",
+      "description": "The idea has potential for significant scale and growth",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "potential"
+    }
+  ],
+  "promotion_criteria": {
+    "required_checks": 5,
+    "minimum_llm_confidence": 0.7,
+    "user_override_allowed": true
+  }
+} 

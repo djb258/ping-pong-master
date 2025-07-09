@@ -1,0 +1,67 @@
+{
+  "altitude": "20k",
+  "name": "Industry & Market",
+  "description": "Target industry and market understanding",
+  "guardrail_profile": "search_prep",
+  "checklist_items": [
+    {
+      "id": "target_industry",
+      "label": "Target Industry",
+      "description": "User has identified specific industries they want to work in",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "specificity"
+    },
+    {
+      "id": "company_types",
+      "label": "Company Types",
+      "description": "User has considered different company types (startup, corporate, etc.)",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "clarity"
+    },
+    {
+      "id": "market_research",
+      "label": "Market Research",
+      "description": "User has researched job market trends and opportunities",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "knowledge"
+    },
+    {
+      "id": "salary_expectations",
+      "label": "Salary Expectations",
+      "description": "User has realistic salary expectations for their target role",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "realism"
+    },
+    {
+      "id": "location_preferences",
+      "label": "Location Preferences",
+      "description": "User has considered geographic preferences and constraints",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "preferences"
+    },
+    {
+      "id": "remote_work_preferences",
+      "label": "Remote Work Preferences",
+      "description": "User has considered remote/hybrid work preferences",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "preferences"
+    }
+  ],
+  "promotion_criteria": {
+    "required_checks": 6,
+    "minimum_llm_confidence": 0.7,
+    "user_override_allowed": true
+  }
+} 

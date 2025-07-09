@@ -1,300 +1,389 @@
-# Ping-Pong Prompt App
+# 🚀 APPROACH App - Altitude-Based Ping-Pong Prompt Refinement
 
-A Next.js + React application for AI-powered prompt refinement with ping-pong interactions and **altitude-based logic**, built following **Barton Doctrine** principles.
+A Next.js + React application implementing **altitude-based thinking** with **guardrail-driven checklists**, **mode profiles**, and **drift detection**. Built following **Barton Doctrine** principles for structured AI interactions.
 
 ## 🎯 Purpose
 
-The Ping-Pong Prompt App allows users to:
-- Enter a "ping" (input prompt)
-- Send it to a refinement engine using an abstracted `refinePrompt()` function
-- Display the returned "pong" (refined output)
-- Maintain a complete history of ping-pong exchanges
-- Export session data as STAMPED/SPVPET/STACKED compliant JSON
-- **NEW**: Use altitude-based refinement (30k→20k→10k→5k) with tree growth
-- **NEW**: Track readiness status (red/yellow/green) for prompt quality
-- **NEW**: Build idea trees with automatic branch extraction
-- **NEW**: Support direction changes with tree pruning
+The APPROACH App guides users through progressive idea refinement using altitude-based logic:
 
-## 🚀 Altitude-Based Refinement
+- **30k ft (Vision)**: High-level goals and aspirations
+- **20k ft (Category)**: Industry and domain identification  
+- **10k ft (Specialization)**: Specific niche and approach
+- **5k ft (Execution)**: Concrete actions and implementation
 
-The app now features **altitude-based prompt logic** that guides users through progressive refinement:
+## 🏗️ Core Architecture
 
-### Altitude Levels
-- **30k ft (Vision)**: High-level user vision and goals
-- **20k ft (Category)**: Broad category or domain  
-- **10k ft (Specialization)**: Specific specialization within category
-- **5k ft (Execution)**: Specific execution details and implementation
+```
+User Input → Altitude Loop → Checklist Gating → Promotion → LLM Refinement
+     ↓              ↓              ↓              ↓              ↓
+  Initial      Mode-Aware      Guardrail      Drift Check    Enhanced
+  Prompt       Processing      Validation     & Summary      Output
+```
 
-### Key Features
-- **Readiness Status**: Real-time assessment of prompt quality
-  - 🔴 Red: Too vague, needs more specificity
-  - 🟡 Yellow: Improving but could be more specific  
-  - 🟢 Green: Specific and actionable
-- **Idea Tree Growth**: Automatic extraction of tree branches on each refinement
-- **Direction Changes**: Prune branches when user changes direction
-- **Structured Output**: Final export includes core idea, branches, and readiness status
+### 🔄 Altitude-Based Ping-Pong Flow
 
-### Example Output
+1. **Input**: User enters initial idea/prompt
+2. **Altitude Assessment**: System determines current altitude level
+3. **Guardrail Loading**: Mode-specific checklists are loaded
+4. **LLM Evaluation**: AI pre-checks checklist items with reasoning
+5. **User Validation**: User manually overrides LLM suggestions
+6. **Promotion Gate**: "Next Level" button only enabled when all items checked
+7. **Drift Detection**: System compares summaries across altitude transitions
+8. **Dependency Validation**: Content validated against altitude-specific rules
+9. **Refinement**: LLM generates altitude-appropriate refinements
+10. **Summary Generation**: AI creates altitude-specific summaries
+
+## 🎛️ Mode Profile System
+
+The app supports multiple **mode profiles** that change the entire checklist logic:
+
+### Available Modes
+- **🏗️ Blueprint Logic**: Business planning and strategy development
+- **🔍 Search Preparation**: Job search and career transition
+- **🚀 Startup Foundation**: Entrepreneurial venture building
+- **📋 Project Management**: Structured project planning
+- **📚 Learning Path**: Educational journey planning
+
+### Mode Switching
+- **Dynamic Checklist Loading**: Each mode has unique checklists per altitude
+- **Real-time Updates**: Changing modes immediately reloads all active guardrails
+- **Context Preservation**: User progress maintained across mode switches
+
+## 🛡️ Guardrail System
+
+### Checklist Structure
+Each altitude level has mode-specific checklists with:
+
 ```json
 {
-  "core_idea": "Become a Life & Health advisor",
-  "branches": [
-    { "label": "Market", "value": "Individual", "altitude": "10k" },
-    { "label": "Focus", "value": "Stop-loss", "altitude": "7k" },
-    { "label": "Product Type", "value": "Level-funded", "altitude": "5k" }
+  "altitude": "30k",
+  "name": "Vision",
+  "checklist_items": [
+    {
+      "id": "vision_clarity",
+      "label": "Clear Vision Statement",
+      "description": "User has articulated a clear, specific vision",
+      "llm_checked": false,
+      "llm_reason": "",
+      "user_checked": false,
+      "category": "clarity"
+    }
   ],
-  "readiness_status": "green"
+  "promotion_criteria": {
+    "required_checks": 5,
+    "minimum_llm_confidence": 0.7,
+    "user_override_allowed": true
+  }
 }
 ```
 
-## 🏗️ Architecture (Barton Doctrine)
+### LLM Integration
+- **Pre-evaluation**: AI analyzes user content against checklist criteria
+- **Reasoning Display**: Shows why AI checked/unchecked each item
+- **User Override**: Users can disagree with AI recommendations
+- **Accept All**: One-click to accept all AI suggestions
 
-This application follows Barton Doctrine principles:
+### Promotion Gating
+- **Progress Tracking**: Visual progress bar showing completion percentage
+- **Button States**: "Next Level" disabled until all required items checked
+- **Status Display**: Clear indication of what's needed to proceed
 
-### **Separation of Concerns**
-- `/components/PingPongForm.jsx` → Original UI and state management
-- `/components/AltitudePingPongForm.jsx` → Enhanced altitude-based UI
-- `/utils/refinePrompt.js` → Original LLM abstraction
-- `/utils/altitudePromptRefiner.js` → Altitude-based refinement logic
-- `/pages/api/refine-prompt.js` → Original refinement endpoint
-- `/pages/api/refine-prompt-altitude.js` → Altitude-based endpoint
-- `/pages/index.js` → Application entry point with tab interface
+## 🧠 Drift Detection & Validation
 
-### **Provider Abstraction**
-The LLM integration is fully abstracted, allowing easy swapping between providers:
-- **Abacus** (current implementation)
-- **GPT-4** (ready for implementation)
-- **Claude** (ready for implementation)
+### Drift Detection System
+Monitors user direction changes across altitude levels:
 
-### **Schema Compliance**
-All exports follow **STAMPED/SPVPET/STACKED** schema discipline:
-- **STAMPED**: Structured, Timestamped, Actionable, Measurable, Paired, Exportable, Documented
-- **SPVPET**: Structured, Paired, Validated, Provenance, Exportable, Traceable
-- **STACKED**: Structured, Timestamped, Actionable, Contextual, Keyed, Exportable, Documented
+- **Topic Shift Detection**: Identifies major topic area changes
+- **Scope Change Detection**: Monitors for significant scope expansions/contractions  
+- **Goal Misalignment**: Detects when current content doesn't align with previous goals
+- **Semantic Similarity**: Calculates text similarity between altitude summaries
+
+### Altitude Dependency Validation
+Enforces altitude-appropriate content:
+
+```json
+{
+  "30k": {
+    "must_not_include": ["tools", "tech", "implementation", "timeline"],
+    "must_include": ["vision", "goal", "dream", "aspire"]
+  },
+  "5k": {
+    "must_not_include": ["vision", "dream", "high-level", "broad"],
+    "must_include": ["plan", "timeline", "action", "implementation"]
+  }
+}
+```
+
+### Visual Feedback
+- **🚨 Drift Warnings**: Red alerts for detected direction changes
+- **⚠️ Dependency Violations**: Orange warnings for rule violations
+- **📝 Altitude Summaries**: Blue summaries showing progression
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ 
+- Node.js 18+
 - npm or yarn
 
 ### Installation
 
 ```bash
+# Clone repository
+git clone https://github.com/your-repo/ping-pong-prompt.git
+cd ping-pong-prompt
+
 # Install dependencies
 npm install
 
-# Run development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Start production server
-npm start
-```
-
-### Development Server
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## 📁 Project Structure
-
-```
-ping-pong-prompt-app/
-├── components/
-│   ├── PingPongForm.jsx           # Original UI component
-│   └── AltitudePingPongForm.jsx   # Enhanced altitude-based UI
-├── pages/
-│   ├── api/
-│   │   ├── abacus.js              # Abacus API endpoint
-│   │   ├── refine-prompt.js       # Original refinement endpoint
-│   │   └── refine-prompt-altitude.js # Altitude-based endpoint
-│   ├── index.js                   # Application entry point
-│   └── test-altitude.js           # Test page for altitude functionality
-├── styles/
-│   ├── PingPongForm.module.css    # Original component styles
-│   └── AltitudePingPongForm.module.css # Enhanced component styles
-├── utils/
-│   ├── refinePrompt.js            # Original LLM provider abstraction
-│   └── altitudePromptRefiner.js   # Altitude-based refinement logic
-├── promptTemplates/
-│   └── pingPongTemplate.json      # Altitude configuration template
-├── package.json
-├── next.config.js
-└── README.md
-```
-
-## 🔧 Configuration
-
-### Environment Variables Setup
-
-**Step 1**: Copy the environment template:
-```bash
-# Windows (PowerShell)
-Copy-Item env.template .env.local
-
-# Linux/Mac
+# Copy environment template
 cp env.template .env.local
+
+# Edit .env.local with your API keys
+# See Configuration section below
+
+# Start development server
+npm run dev
 ```
 
-**Step 2**: Edit `.env.local` with your actual API keys:
+### Environment Configuration
+
 ```env
-# Required for Abacus API
-ABACUS_API_KEY=your_actual_abacus_api_key_here
+# Required for LLM integration
+ABACUS_API_KEY=your_abacus_api_key_here
 ABACUS_API_URL=https://api.abacus.ai/v1/refine
 ABACUS_ORG_ID=your_abacus_org_id_here
 
-# Optional: Configure other providers for future use
+# Optional: Other LLM providers
 GPT4_API_KEY=your_openai_api_key_here
 CLAUDE_API_KEY=your_anthropic_api_key_here
 ```
 
-**Step 3**: Get your Abacus API credentials:
-1. Visit [https://abacus.ai/](https://abacus.ai/)
-2. Create account or log in
-3. Navigate to API settings/developers section
-4. Generate a new API key
-5. Get your organization ID from the dashboard
+## 📁 Project Structure
 
-### Switching LLM Providers
-
-To add a new LLM provider:
-
-1. **Update `utils/refinePrompt.js`**:
-```javascript
-const LLMProviders = {
-  ABACUS: 'abacus',
-  GPT4: 'gpt4',
-  CLAUDE: 'claude',
-  YOUR_PROVIDER: 'your_provider', // Add here
-};
-
-const providerImplementations = {
-  // ... existing providers
-  [LLMProviders.YOUR_PROVIDER]: async (input) => {
-    // Your implementation here
-    return refinedPrompt;
-  },
-};
+```
+ping-pong-prompt/
+├── components/
+│   ├── AltitudePingPongForm.jsx    # Main altitude-based UI
+│   ├── ChecklistGuardrail.jsx      # Guardrail checklist component
+│   ├── ModeSelector.jsx            # Mode profile selector
+│   └── PingPongForm.jsx            # Original ping-pong UI
+├── pages/
+│   ├── api/
+│   │   ├── evaluate-checklist.js   # LLM checklist evaluation
+│   │   ├── generate-summary.js     # Altitude summary generation
+│   │   ├── refine-prompt-altitude.js # Altitude-based refinement
+│   │   └── refine-prompt.js        # Original refinement
+│   └── index.js                    # Application entry point
+├── checklists/
+│   ├── mode_profiles.json          # Mode profile definitions
+│   ├── altitudeDependencies.json   # Altitude validation rules
+│   ├── altitude_30k_blueprint.json # Blueprint mode checklists
+│   ├── altitude_20k_blueprint.json
+│   ├── altitude_10k_blueprint.json
+│   ├── altitude_5k_blueprint.json
+│   ├── altitude_30k_search.json    # Search mode checklists
+│   └── ...                         # Other mode checklists
+├── utils/
+│   ├── driftDetector.js            # Drift detection & validation
+│   ├── useChecklistState.js        # Checklist state management
+│   ├── altitudePromptRefiner.js    # Altitude-based refinement
+│   └── llmProviders.js             # LLM provider abstraction
+├── styles/
+│   ├── AltitudePingPongForm.module.css
+│   ├── ChecklistGuardrail.module.css
+│   ├── ModeSelector.module.css
+│   └── PingPongForm.module.css
+└── README.md
 ```
 
-2. **Create API endpoint** (if needed):
-```javascript
-// pages/api/your_provider.js
-export default async function handler(req, res) {
-  // Your API implementation
+## 🎨 Key Features
+
+### ✅ Core Functionality
+- **Altitude-Based Refinement**: Progressive 30k→20k→10k→5k thinking
+- **Mode Profile System**: Dynamic checklist loading per mode
+- **Guardrail Validation**: LLM + user checklist validation
+- **Drift Detection**: Automatic direction change detection
+- **Dependency Validation**: Altitude-appropriate content enforcement
+- **LLM Integration**: Multi-provider AI support
+- **Real-time Feedback**: Live progress tracking and validation
+
+### ✅ UI/UX Features
+- **Mode Selector**: Visual mode profile selection
+- **Checklist Interface**: Interactive guardrail management
+- **Progress Visualization**: Altitude journey tracking
+- **Drift Alerts**: Visual warnings for direction changes
+- **Responsive Design**: Mobile-optimized interface
+- **Accessibility**: Keyboard navigation and screen reader support
+
+### ✅ Data Management
+- **Altitude Summaries**: LLM-generated progression summaries
+- **Drift Analysis**: Detailed drift detection results
+- **Dependency Tracking**: Rule violation monitoring
+- **Export Functionality**: Structured data export
+- **Session Persistence**: Progress maintenance across sessions
+
+## 🔧 Configuration
+
+### Adding New Mode Profiles
+
+1. **Create Mode Definition** in `checklists/mode_profiles.json`:
+```json
+{
+  "mode_profiles": {
+    "your_mode": {
+      "name": "Your Mode Name",
+      "description": "Mode description",
+      "altitudes": {
+        "30k": "altitude_30k_your_mode.json",
+        "20k": "altitude_20k_your_mode.json",
+        "10k": "altitude_10k_your_mode.json",
+        "5k": "altitude_5k_your_mode.json"
+      }
+    }
+  }
 }
 ```
 
-## 🎨 Features
+2. **Create Checklist Files** for each altitude level
+3. **Add Mode Metadata** with icon, color, and tags
 
-### Core Functionality
-- ✅ Prompt input with character counting
-- ✅ Real-time refinement processing
-- ✅ Ping-pong history display
-- ✅ Provider selection (Abacus/GPT-4/Claude)
-- ✅ Session statistics tracking
-- ✅ JSON export functionality
-- ✅ **Altitude-based refinement logic**
-- ✅ **Readiness status tracking**
-- ✅ **Idea tree growth and visualization**
-- ✅ **Direction change support with tree pruning**
+### Customizing Altitude Dependencies
 
-### UI/UX Features
-- ✅ Modern, responsive design
-- ✅ Accessibility support (keyboard navigation, focus indicators)
-- ✅ Loading states and error handling
-- ✅ Mobile-optimized interface
-- ✅ High contrast mode support
-- ✅ **Tab interface for switching between modes**
-- ✅ **Visual readiness indicators**
-- ✅ **Interactive idea tree display**
-- ✅ **Altitude level visualization**
-
-### Data Management
-- ✅ STAMPED/SPVPET/STACKED schema compliance
-- ✅ Session tracking with unique IDs
-- ✅ Processing time metrics
-- ✅ Word/character count analytics
-- ✅ Provider provenance tracking
-- ✅ **Altitude progression tracking**
-- ✅ **Tree branch extraction and management**
-- ✅ **Readiness assessment algorithms**
-
-## 📊 Export Schema
-
-The application exports data in STAMPED/SPVPET/STACKED format with enhanced altitude data:
+Edit `checklists/altitudeDependencies.json` to modify validation rules:
 
 ```json
 {
-  "core_idea": "Become a Life & Health advisor",
-  "branches": [
-    { "label": "Market", "value": "Individual", "altitude": "10k" },
-    { "label": "Focus", "value": "Stop-loss", "altitude": "7k" },
-    { "label": "Product Type", "value": "Level-funded", "altitude": "5k" }
-  ],
-  "readiness_status": "green",
-  "refinement_history": [
+  "30k": {
+    "must_not_include": ["your_forbidden_terms"],
+    "must_include": ["your_required_terms"]
+  }
+}
+```
+
+## 📊 Data Export Schema
+
+The app exports comprehensive session data:
+
+```json
+{
+  "session_id": "unique_session_id",
+  "mode_profile": "blueprint_logic",
+  "altitude_progression": [
     {
-      "ping": "I want to start a business",
-      "pong": "Refined prompt with specific details...",
-      "current_altitude": "30k",
-      "new_altitude": "20k", 
-      "readiness_status": "yellow",
-      "idea_tree": [...],
-      "new_branches": [...],
-      "source": "Altitude-Based Refiner",
+      "altitude": "30k",
+      "prompt": "User's original prompt",
+      "refined_prompt": "LLM refined output",
+      "summary": "AI-generated summary",
+      "checklist_completion": {
+        "checked": 5,
+        "required": 5,
+        "percentage": 100
+      },
+      "drift_analysis": {
+        "has_drift": false,
+        "drift_type": null,
+        "confidence": 0
+      },
+      "dependency_validation": {
+        "is_valid": true,
+        "violations": []
+      },
       "timestamp": "2024-01-01T00:00:00.000Z"
     }
-  ]
+  ],
+  "final_output": {
+    "execution_plan": {...},
+    "is_execution_ready": true,
+    "next_steps": [...],
+    "success_criteria": [...]
+  }
 }
 ```
 
 ## 🧪 Testing
 
-### Test Altitude Functionality
-Visit `/test-altitude` to test the altitude-based refinement system:
+### Manual Testing Workflow
+
+1. **Start Development Server**:
+   ```bash
+   npm run dev
+   ```
+
+2. **Test Mode Switching**:
+   - Select different mode profiles
+   - Verify checklist changes
+   - Check LLM evaluation updates
+
+3. **Test Altitude Progression**:
+   - Enter initial idea
+   - Complete checklists at each level
+   - Observe drift detection
+   - Verify dependency validation
+
+4. **Test Drift Detection**:
+   - Change direction mid-progression
+   - Check drift warnings appear
+   - Verify summary comparisons
+
+### Automated Testing
 
 ```bash
-# Start the development server
-npm run dev
+# Run tests (when implemented)
+npm test
 
-# Navigate to test page
-open http://localhost:3000/test-altitude
+# Run specific test suites
+npm run test:altitude
+npm run test:drift
+npm run test:checklists
 ```
 
-### Manual Testing
-1. Start with a vague idea: "I want to start a business"
-2. Watch the altitude progress from 30k → 20k → 10k → 5k
-3. Observe readiness status changes from red → yellow → green
-4. See the idea tree grow with each refinement
-5. Try the "Change Direction" button to test tree pruning
+## 🔄 Usage Examples
 
-## 🔄 Usage Modes
+### Example 1: Business Planning (Blueprint Logic Mode)
 
-The app now supports two modes accessible via tabs:
+1. **30k Vision**: "I want to build a successful business"
+2. **Checklist**: Complete vision clarity, problem identification, success definition
+3. **20k Category**: "Insurance business for families and small businesses"
+4. **Checklist**: Industry identification, business type, market understanding
+5. **10k Specialization**: "Life insurance agent specializing in term policies"
+6. **Checklist**: Niche definition, target segment, value proposition
+7. **5k Execution**: "Get licensed, join agency, build client base"
+8. **Checklist**: Action plan, timeline, resource allocation
 
-### 🚀 Altitude-Based Refinement (Default)
-- Progressive refinement through altitude levels
-- Real-time readiness assessment
-- Interactive idea tree visualization
-- Direction change support
-- Enhanced export with structured data
+### Example 2: Career Transition (Search Preparation Mode)
 
-### 🔄 Original Ping-Pong
-- Classic ping-pong refinement
-- Simple prompt improvement
-- Basic export functionality
-- Compatible with existing workflows
+1. **30k Vision**: "I want to transition to a new career"
+2. **20k Category**: "Technology industry, software development role"
+3. **10k Specialization**: "Frontend React developer for SaaS companies"
+4. **5k Execution**: "Update portfolio, apply to positions, practice coding"
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Guidelines
+
+- Follow existing code structure and patterns
+- Add tests for new functionality
+- Update documentation for new features
+- Ensure accessibility compliance
+- Test across different mode profiles
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **Barton Doctrine** for architectural principles
+- **Altitude-based thinking** methodology
+- **Next.js** and **React** communities
+- **LLM providers** for AI integration capabilities
+
+---
+
+**Built with ❤️ for structured AI interactions and progressive idea refinement.** 

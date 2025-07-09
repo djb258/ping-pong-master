@@ -5,387 +5,470 @@
  * and readiness status tracking.
  */
 
-import { useState, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from '../styles/AltitudePingPongForm.module.css';
 
-/**
- * Create clean export entry with altitude data
- */
-const createAltitudeExportEntry = (ping, pong, altitudeData, source = 'Altitude Refiner') => ({
-  ping: ping,
-  pong: pong,
-  current_altitude: altitudeData.current_altitude,
-  new_altitude: altitudeData.new_altitude,
-  readiness_status: altitudeData.readiness_status,
-  idea_tree: altitudeData.idea_tree,
-  new_branches: altitudeData.new_branches,
-  source: source,
-  timestamp: new Date().toISOString(),
-});
+const AltitudePingPongForm = () => {
+  const [blocks, setBlocks] = useState([]);
+  const [currentBlockId, setCurrentBlockId] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedTemplate] = useState(process.env.NEXT_PUBLIC_DEFAULT_TEMPLATE || 'career'); // Fixed template, configured via env vars
+  const [userResponses, setUserResponses] = useState({});
 
-/**
- * Readiness status indicator component
- */
-const ReadinessIndicator = ({ status, altitude }) => {
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'red': return '#ff4444';
-      case 'yellow': return '#ffaa00';
-      case 'green': return '#44ff44';
-      default: return '#888888';
-    }
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'red': return 'Too Vague';
-      case 'yellow': return 'Improving';
-      case 'green': return 'Ready';
-      default: return 'Unknown';
-    }
-  };
-
-  return (
-    <div className={styles.readinessIndicator}>
-      <div 
-        className={styles.statusDot} 
-        style={{ backgroundColor: getStatusColor(status) }}
-      />
-      <span className={styles.statusText}>{getStatusText(status)}</span>
-      <span className={styles.altitudeText}>({altitude})</span>
-    </div>
-  );
-};
-
-/**
- * Tree visualization component
- */
-const IdeaTree = ({ tree, onBranchClick }) => {
-  if (!tree || tree.length === 0) {
-    return (
-      <div className={styles.emptyTree}>
-        <p>No branches yet. Start refining your idea to grow the tree!</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className={styles.ideaTree}>
-      <h3>Idea Tree ({tree.length} branches)</h3>
-      <div className={styles.treeContainer}>
-        {tree.map((branch, index) => (
-          <div 
-            key={index} 
-            className={styles.treeBranch}
-            onClick={() => onBranchClick && onBranchClick(branch)}
-          >
-            <div className={styles.branchLabel}>{branch.label}</div>
-            <div className={styles.branchValue}>{branch.value}</div>
-            <div className={styles.branchAltitude}>{branch.altitude}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-/**
- * Altitude level display component
- */
-const AltitudeDisplay = ({ currentAltitude, newAltitude, context }) => {
-  const altitudeLevels = {
-    '30k': { name: 'Vision', color: '#4a90e2' },
-    '20k': { name: 'Category', color: '#7ed321' },
-    '10k': { name: 'Specialization', color: '#f5a623' },
-    '5k': { name: 'Execution', color: '#d0021b' }
-  };
-
-  return (
-    <div className={styles.altitudeDisplay}>
-      <div className={styles.altitudeInfo}>
-        <span className={styles.altitudeLabel}>Current Altitude:</span>
-        <span 
-          className={styles.altitudeValue}
-          style={{ color: altitudeLevels[currentAltitude]?.color }}
-        >
-          {currentAltitude} ({altitudeLevels[currentAltitude]?.name})
-        </span>
-      </div>
-      {newAltitude !== currentAltitude && (
-        <div className={styles.altitudeInfo}>
-          <span className={styles.altitudeLabel}>Moving to:</span>
-          <span 
-            className={styles.altitudeValue}
-            style={{ color: altitudeLevels[newAltitude]?.color }}
-          >
-            {newAltitude} ({altitudeLevels[newAltitude]?.name})
-          </span>
-        </div>
-      )}
-      {context && (
-        <div className={styles.altitudeContext}>
-          <p>{context.description}</p>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default function AltitudePingPongForm() {
-  const [pingInput, setPingInput] = useState('');
-  const [currentPong, setCurrentPong] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [pingPongHistory, setPingPongHistory] = useState([]);
-  const [ideaTree, setIdeaTree] = useState([]);
-  const [coreIdea, setCoreIdea] = useState('');
-  const [currentAltitude, setCurrentAltitude] = useState('30k');
-  const [readinessStatus, setReadinessStatus] = useState('red');
-  const [altitudeContext, setAltitudeContext] = useState(null);
-  const [suggestedQuestions, setSuggestedQuestions] = useState([]);
-  const [isDirectionChange, setIsDirectionChange] = useState(false);
-
-  /**
-   * Handle altitude-based prompt refinement
-   */
-  const handleAltitudeRefinement = useCallback(async (e) => {
-    e.preventDefault();
+  const createNewBlock = (altitude = '30k') => {
+    const newBlock = {
+      id: Date.now(),
+      altitude,
+      prompt: '',
+      refinedPrompt: '',
+      context: '',
+      suggestedQuestions: [],
+      readiness: 'red',
+      iterations: 0
+    };
     
-    if (!pingInput.trim()) {
-      alert('Please enter a prompt to refine');
-      return;
-    }
+    // Replace all blocks with just this new one
+    setBlocks([newBlock]);
+    setCurrentBlockId(newBlock.id);
+    return newBlock.id;
+  };
 
-    setIsProcessing(true);
-    setCurrentPong('');
+  const updateBlock = (blockId, updates) => {
+    setBlocks(prev => prev.map(block => 
+      block.id === blockId ? { ...block, ...updates } : block
+    ));
+  };
 
+  const refineBlock = async (blockId) => {
+    const block = blocks.find(b => b.id === blockId);
+    if (!block || !block.prompt.trim()) return;
+
+    setIsLoading(true);
+    
     try {
-      // Use the altitude-based refinement endpoint
-      const response = await fetch('/api/refine-prompt-altitude', {
+      const response = await fetch('/api/refine-prompt-chatgpt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          prompt: pingInput,
-          ideaTree: ideaTree,
-          coreIdea: coreIdea,
-          isDirectionChange: isDirectionChange
+        body: JSON.stringify({
+          prompt: block.prompt,
+          ideaTree: blocks.map(b => ({ value: b.prompt, altitude: b.altitude })),
+          coreIdea: blocks[0]?.prompt || '',
+          isDirectionChange: false,
+          altitude: block.altitude,
+          template: selectedTemplate
         })
       });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        // Update state with altitude data
-        setCurrentPong(data.refined_prompt);
-        setIdeaTree(data.idea_tree);
-        setCurrentAltitude(data.new_altitude);
-        setReadinessStatus(data.readiness_status);
-        setAltitudeContext(data.altitude_context);
-        setSuggestedQuestions(data.suggested_questions);
-        
-        // Set core idea if this is the first iteration
-        if (!coreIdea) {
-          setCoreIdea(pingInput);
-        }
-        
-        // Create enhanced export entry
-        const exportEntry = createAltitudeExportEntry(
-          pingInput,
-          data.refined_prompt,
-          data,
-          data.source
-        );
 
-        setPingPongHistory(prev => [...prev, exportEntry]);
-        
-        // Clear direction change flag after processing
-        setIsDirectionChange(false);
-        
-        // Only clear input if not a clarifying question
-        if (!data.refined_prompt.toLowerCase().includes('?')) {
-          setPingInput('');
-        }
-      } else {
-        throw new Error(data.error || 'Refinement failed');
-      }
+      const result = await response.json();
+      
+      updateBlock(blockId, {
+        refinedPrompt: result.conversational_response || result.refined_prompt || 'Conversational refinement completed',
+        context: result.altitude_context || result.context || '',
+        suggestedQuestions: result.conversational_questions || result.suggested_questions || [],
+        readiness: result.readiness_status || result.readinessStatus,
+        iterations: block.iterations + 1
+      });
       
     } catch (error) {
-      console.error('Error in altitude refinement:', error);
-      alert(`Error refining prompt: ${error.message}`);
+      console.error('Error refining block:', error);
     } finally {
-      setIsProcessing(false);
+      setIsLoading(false);
     }
-  }, [pingInput, ideaTree, coreIdea, isDirectionChange]);
+  };
 
-  /**
-   * Handle direction change (user wants to go in a different direction)
-   */
-  const handleDirectionChange = useCallback(() => {
-    setIsDirectionChange(true);
-    // Don't clear the input - let user modify it
-  }, []);
+  const moveToNextAltitude = (blockId) => {
+    const block = blocks.find(b => b.id === blockId);
+    if (!block) return;
 
-  /**
-   * Reset the entire session
-   */
-  const handleReset = useCallback(() => {
-    setIdeaTree([]);
-    setCoreIdea('');
-    setCurrentAltitude('30k');
-    setReadinessStatus('red');
-    setAltitudeContext(null);
-    setSuggestedQuestions([]);
-    setIsDirectionChange(false);
-    setPingPongHistory([]);
-    setCurrentPong('');
-  }, []);
+    const altitudeOrder = ['30k', '20k', '10k', '5k'];
+    const currentIndex = altitudeOrder.indexOf(block.altitude);
+    const nextAltitude = altitudeOrder[currentIndex + 1];
 
-  /**
-   * Export altitude-based ping-pong history
-   */
-  const handleExport = useCallback(() => {
-    if (pingPongHistory.length === 0) {
-      alert('No ping-pong history to export');
+    if (nextAltitude) {
+      // Create new block at next altitude with the refined prompt as input
+      const newBlock = {
+        id: Date.now(),
+        altitude: nextAltitude,
+        prompt: block.refinedPrompt || block.prompt,
+        refinedPrompt: '',
+        context: '',
+        suggestedQuestions: [],
+        readiness: 'red',
+        iterations: 0
+      };
+      
+      // Replace current block with new one
+      setBlocks([newBlock]);
+      setCurrentBlockId(newBlock.id);
+    }
+  };
+
+  const refineWithResponses = async (blockId) => {
+    const block = blocks.find(b => b.id === blockId);
+    if (!block || !userResponses[blockId]?.trim()) {
+      console.log('Refine with responses: Block not found or no responses');
       return;
     }
 
-    // Create final structured output
-    const finalOutput = {
-      core_idea: coreIdea,
-      branches: ideaTree.map(branch => ({
-        label: branch.label,
-        value: branch.value,
-        altitude: branch.altitude
-      })),
-      readiness_status: readinessStatus,
-      refinement_history: pingPongHistory
-    };
-
-    const blob = new Blob([JSON.stringify(finalOutput, null, 2)], {
-      type: 'application/json',
+    console.log('Starting refinement with responses:', {
+      blockId,
+      responses: userResponses[blockId],
+      isLoading
     });
 
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `altitude-ping-pong-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, [pingPongHistory, coreIdea, ideaTree, readinessStatus]);
+    setIsLoading(true);
+    try {
+      const requestBody = {
+        prompt: block.prompt,
+        ideaTreeLength: block.ideaTree?.length || 0,
+        coreIdea: block.prompt,
+        isDirectionChange: false,
+        altitude: block.altitude,
+        template: selectedTemplate,
+        userResponses: userResponses[blockId]
+      };
+
+      console.log('Sending request:', requestBody);
+
+      const response = await fetch('/api/refine-prompt-chatgpt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      });
+
+      console.log('Response status:', response.status);
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Refinement result:', result);
+        
+        setBlocks(prev => prev.map(b => 
+          b.id === blockId 
+            ? { 
+                ...b, 
+                refinedPrompt: result.refined_prompt || result.conversational_response,
+                suggestedQuestions: result.conversational_questions || result.suggested_questions,
+                iterations: b.iterations + 1
+              }
+            : b
+        ));
+
+        // Don't clear the response - keep it visible for reference
+        // setUserResponses(prev => ({ ...prev, [blockId]: '' }));
+      } else {
+        console.error('Response not ok:', response.status, response.statusText);
+      }
+    } catch (error) {
+      console.error('Error refining with responses:', error);
+    } finally {
+      setIsLoading(false);
+      console.log('Refinement completed, loading set to false');
+    }
+  };
+
+  const getAltitudeColor = (altitude) => {
+    const colors = { '30k': '#4A90E2', '20k': '#7ED321', '10k': '#F5A623', '5k': '#D0021B' };
+    return colors[altitude] || '#999';
+  };
+
+  const getReadinessColor = (status) => {
+    const colors = { red: '#D0021B', yellow: '#F5A623', green: '#7ED321' };
+    return colors[status] || '#999';
+  };
+
+  const getAltitudeName = (altitude) => {
+    const names = { '30k': 'Vision', '20k': 'Category', '10k': 'Specialization', '5k': 'Execution' };
+    return names[altitude] || altitude;
+  };
+
+  const getNextAltitudeName = (currentAltitude) => {
+    const altitudeOrder = ['30k', '20k', '10k', '5k'];
+    const currentIndex = altitudeOrder.indexOf(currentAltitude);
+    const nextIndex = Math.min(currentIndex + 1, altitudeOrder.length - 1);
+    return getAltitudeName(altitudeOrder[nextIndex]);
+  };
+
+  // Create initial block if none exist
+  useEffect(() => {
+    if (blocks.length === 0) {
+      createNewBlock();
+    }
+  }, []);
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <h1>Altitude-Based Ping-Pong Prompt Refiner</h1>
-        <p>Refine your ideas through altitude levels: Vision (30k) → Category (20k) → Specialization (10k) → Execution (5k)</p>
-      </div>
-
-      <div className={styles.mainContent}>
-        <div className={styles.leftPanel}>
-          {/* Altitude and Readiness Display */}
-          <div className={styles.statusPanel}>
-            <ReadinessIndicator status={readinessStatus} altitude={currentAltitude} />
-            <AltitudeDisplay 
-              currentAltitude={currentAltitude} 
-              newAltitude={currentAltitude}
-              context={altitudeContext}
-            />
-          </div>
-
-          {/* Input Form */}
-          <form onSubmit={handleAltitudeRefinement} className={styles.inputForm}>
-            <div className={styles.inputGroup}>
-              <label htmlFor="pingInput">Your Idea/Prompt:</label>
-              <textarea
-                id="pingInput"
-                value={pingInput}
-                onChange={(e) => setPingInput(e.target.value)}
-                placeholder="Enter your idea or prompt here..."
-                rows={4}
-                className={styles.textarea}
-                disabled={isProcessing}
-              />
-            </div>
-
-            <div className={styles.buttonGroup}>
-              <button 
-                type="submit" 
-                className={styles.primaryButton}
-                disabled={isProcessing || !pingInput.trim()}
-              >
-                {isProcessing ? 'Refining...' : 'Refine with Altitude'}
-              </button>
-              
-              <button 
-                type="button" 
-                onClick={handleDirectionChange}
-                className={styles.secondaryButton}
-                disabled={isProcessing}
-              >
-                Change Direction
-              </button>
-              
-              <button 
-                type="button" 
-                onClick={handleReset}
-                className={styles.resetButton}
-                disabled={isProcessing}
-              >
-                Reset Session
-              </button>
-            </div>
-          </form>
-
-          {/* Suggested Questions */}
-          {suggestedQuestions.length > 0 && (
-            <div className={styles.suggestedQuestions}>
-              <h3>Suggested Questions:</h3>
-              <ul>
-                {suggestedQuestions.map((question, index) => (
-                  <li key={index}>{question}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Current Response */}
-          {currentPong && (
-            <div className={styles.currentResponse}>
-              <h3>Refined Response:</h3>
-              <div className={styles.responseContent}>
-                {currentPong}
-              </div>
-            </div>
-          )}
+      <div className={styles.leftPanel}>
+        <div className={styles.header}>
+          <h1>Altitude-Based Prompt Refinement</h1>
+          <p>Work within each block to refine your idea through altitude levels</p>
         </div>
 
-        <div className={styles.rightPanel}>
-          {/* Idea Tree */}
-          <IdeaTree 
-            tree={ideaTree} 
-            onBranchClick={(branch) => {
-              console.log('Branch clicked:', branch);
-              // Could implement branch editing here
-            }}
-          />
 
-          {/* Export Section */}
-          <div className={styles.exportSection}>
-            <h3>Export Options</h3>
-            <button 
-              onClick={handleExport}
-              className={styles.exportButton}
-              disabled={pingPongHistory.length === 0}
+
+        <div className={styles.blocksContainer}>
+          {blocks.map((block, index) => (
+            <div 
+              key={block.id} 
+              className={styles.block}
             >
-              Export Altitude Data
+              <div className={styles.blockHeader}>
+                <div className={styles.blockMeta}>
+                  <span className={styles.blockNumber}>#{index + 1}</span>
+                  <span 
+                    className={styles.altitudeBadge} 
+                    style={{ backgroundColor: getAltitudeColor(block.altitude) }}
+                  >
+                    {block.altitude} - {getAltitudeName(block.altitude)}
+                  </span>
+                  <span 
+                    className={styles.readinessDot} 
+                    style={{ backgroundColor: getReadinessColor(block.readiness) }}
+                  ></span>
+                  {block.iterations > 0 && (
+                    <span className={styles.iterationCount}>
+                      {block.iterations} iteration{block.iterations !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              <div className={styles.blockContent}>
+                <div className={styles.inputSection}>
+                  <label>Your Idea:</label>
+                  <textarea
+                    value={block.prompt}
+                    onChange={(e) => updateBlock(block.id, { prompt: e.target.value })}
+                    placeholder={`What's your ${getAltitudeName(block.altitude).toLowerCase()} level idea?`}
+                    className={styles.promptInput}
+                    rows={2}
+                  />
+                  <button 
+                    onClick={() => refineBlock(block.id)}
+                    disabled={isLoading || !block.prompt.trim()}
+                    className={styles.refineButton}
+                  >
+                    {isLoading ? 'Refining...' : 'Refine with AI'}
+                  </button>
+                </div>
+
+                {block.suggestedQuestions && block.suggestedQuestions.length > 0 && (
+                  <div className={styles.responseSection}>
+                    <label>AI's Questions:</label>
+                    <div className={styles.questionsDisplay}>
+                      {block.suggestedQuestions.map((question, qIndex) => (
+                        <div key={qIndex} className={styles.questionDisplay}>
+                          {question}
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <label>Your Responses:</label>
+                    <textarea
+                      value={userResponses[block.id] || ''}
+                      onChange={(e) => setUserResponses(prev => ({ ...prev, [block.id]: e.target.value }))}
+                      placeholder="Type your responses to the AI's questions here..."
+                      className={styles.responseInput}
+                      rows={3}
+                    />
+                    <button 
+                      onClick={() => {
+                        console.log('Button clicked!', {
+                          blockId: block.id,
+                          hasResponses: !!userResponses[block.id]?.trim(),
+                          responses: userResponses[block.id],
+                          isLoading
+                        });
+                        refineWithResponses(block.id);
+                      }}
+                      disabled={isLoading || !userResponses[block.id]?.trim()}
+                      className={styles.refineWithResponsesButton}
+                    >
+                      {isLoading ? 'Refining...' : 'Refine with AI'}
+                    </button>
+                  </div>
+                )}
+
+                {block.refinedPrompt && (
+                  <div className={styles.outputSection}>
+                    <label>AI Refinement ({getNextAltitudeName(block.altitude)} Level):</label>
+                    <div className={styles.refinedDisplay}>
+                      {block.refinedPrompt}
+                    </div>
+                    <div className={styles.refinementActions}>
+                      <button 
+                        onClick={() => updateBlock(block.id, { prompt: block.refinedPrompt })}
+                        className={styles.useSuggestionButton}
+                      >
+                        Use This Refinement
+                      </button>
+                      <button 
+                        onClick={() => updateBlock(block.id, { refinedPrompt: '', suggestedQuestions: [] })}
+                        className={styles.clearRefinementButton}
+                      >
+                        Clear Refinement
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Execution Output Display - Show when at 5k ft level */}
+                {block.altitude === '5k' && block.refinedPrompt && (
+                  <div className={styles.executionOutputSection}>
+                    <label>🎯 Execution Plan (Ready to Implement):</label>
+                    <div className={styles.executionDisplay}>
+                      <div className={styles.executionSection}>
+                        <h4>📋 Immediate Actions:</h4>
+                        <ul>
+                          <li>Research state licensing requirements</li>
+                          <li>Choose insurance company to work with</li>
+                          <li>Complete pre-licensing education</li>
+                          <li>Schedule licensing exam</li>
+                          <li>Prepare business cards and marketing materials</li>
+                        </ul>
+                      </div>
+                      
+                      <div className={styles.executionSection}>
+                        <h4>⏰ Timeline:</h4>
+                        <div className={styles.timeline}>
+                          <div><strong>Week 1-2:</strong> Research and planning</div>
+                          <div><strong>Week 3-4:</strong> Setup and preparation</div>
+                          <div><strong>Month 2:</strong> Launch and initial execution</div>
+                          <div><strong>Month 3+:</strong> Iterate and scale</div>
+                        </div>
+                      </div>
+                      
+                      <div className={styles.executionSection}>
+                        <h4>📊 Success Metrics:</h4>
+                        <ul>
+                          <li>Complete initial setup and preparation</li>
+                          <li>Achieve first milestone or goal</li>
+                          <li>Establish consistent progress tracking</li>
+                          <li>Build initial network or client base</li>
+                          <li>Measure and adjust based on results</li>
+                        </ul>
+                      </div>
+                      
+                      <div className={styles.executionSection}>
+                        <h4>🛠️ Resources Needed:</h4>
+                        <ul>
+                          <li>Time for daily/weekly execution</li>
+                          <li>Financial resources for startup costs</li>
+                          <li>Skills and knowledge development</li>
+                          <li>Support network and mentors</li>
+                          <li>Tools and technology needed</li>
+                        </ul>
+                      </div>
+                    </div>
+                    
+                    <div className={styles.executionActions}>
+                      <button 
+                        onClick={() => {
+                          const executionData = {
+                            plan: block.refinedPrompt,
+                            actions: [
+                              'Research state licensing requirements',
+                              'Choose insurance company to work with',
+                              'Complete pre-licensing education'
+                            ],
+                            timeline: 'Week 1-2: Research and planning\nWeek 3-4: Setup and preparation\nMonth 2: Launch and initial execution\nMonth 3+: Iterate and scale',
+                            metrics: [
+                              'Complete initial setup and preparation',
+                              'Achieve first milestone or goal',
+                              'Establish consistent progress tracking'
+                            ]
+                          };
+                          const dataStr = JSON.stringify(executionData, null, 2);
+                          const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                          const url = URL.createObjectURL(dataBlob);
+                          const link = document.createElement('a');
+                          link.href = url;
+                          link.download = 'execution-plan.json';
+                          link.click();
+                        }}
+                        className={styles.exportExecutionButton}
+                      >
+                        📥 Export Execution Plan
+                      </button>
+                    </div>
+                  </div>
+                )}
+                
+                <div className={styles.blockActions}>
+                  <button 
+                    onClick={() => moveToNextAltitude(block.id)}
+                    disabled={!block.refinedPrompt.trim()}
+                    className={styles.nextLevelButton}
+                  >
+                    {block.altitude === '5k' ? '✅ Execution Complete' : 'Next Level'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+
+      </div>
+
+      <div className={styles.rightPanel}>
+        <div className={styles.progressContainer}>
+          <h3>Altitude Journey</h3>
+          <div className={styles.altitudeProgress}>
+            {['30k', '20k', '10k', '5k'].map((altitude, index) => {
+              const blockAtLevel = blocks.find(b => b.altitude === altitude);
+              const isCurrent = blockAtLevel && blockAtLevel.id === currentBlockId;
+              const isCompleted = blocks.some(b => b.altitude === altitude && b.id !== currentBlockId);
+              
+              return (
+                <div 
+                  key={altitude} 
+                  className={`${styles.altitudeLevel} ${
+                    isCompleted ? styles.completed : 
+                    isCurrent ? styles.current : styles.upcoming
+                  }`}
+                >
+                  <div 
+                    className={styles.levelIndicator}
+                    style={{ backgroundColor: getAltitudeColor(altitude) }}
+                  >
+                    {isCompleted ? '✓' : isCurrent ? '●' : index + 1}
+                  </div>
+                  <div className={styles.levelInfo}>
+                    <span className={styles.levelName}>{getAltitudeName(altitude)}</span>
+                    <span className={styles.levelAltitude}>{altitude}</span>
+                  </div>
+                  {blockAtLevel && (
+                    <div className={styles.levelStatus}>
+                      <span 
+                        className={styles.statusDot}
+                        style={{ backgroundColor: getReadinessColor(blockAtLevel.readiness) }}
+                      ></span>
+                      {blockAtLevel.iterations} iterations
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          
+          <div className={styles.progressStats}>
+            <p>Current Level: {blocks[0]?.altitude || 'None'}</p>
+            <p>Current Iterations: {blocks[0]?.iterations || 0}</p>
+            <p>Total Iterations: {blocks.reduce((sum, b) => sum + b.iterations, 0)}</p>
+          </div>
+          
+          <div className={styles.addBlockSection}>
+            <button 
+              onClick={() => createNewBlock()}
+              className={styles.addBlockButton}
+            >
+              + Start New Session
             </button>
-            <p className={styles.exportInfo}>
-              Exports structured data with core idea, branches, and refinement history
-            </p>
           </div>
         </div>
       </div>
     </div>
   );
-} 
+};
+
+export default AltitudePingPongForm; 

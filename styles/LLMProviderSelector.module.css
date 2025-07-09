@@ -1,0 +1,152 @@
+.providerSelector {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+}
+
+.providerSelector h3 {
+  margin: 0 0 8px 0;
+  color: #333;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.providerSelector p {
+  margin: 0 0 20px 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.providerGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.providerCard {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  background: white;
+}
+
+.providerCard:hover {
+  border-color: var(--provider-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.providerCard.selected {
+  border-color: var(--provider-color);
+  background: linear-gradient(135deg, rgba(var(--provider-color), 0.05), rgba(var(--provider-color), 0.1));
+  box-shadow: 0 4px 12px rgba(var(--provider-color), 0.2);
+}
+
+.providerIcon {
+  font-size: 24px;
+  margin-right: 16px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.providerCard.selected .providerIcon {
+  background: rgba(var(--provider-color), 0.1);
+}
+
+.providerContent {
+  flex: 1;
+}
+
+.providerContent h4 {
+  margin: 0 0 4px 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.providerContent p {
+  margin: 0;
+  color: #666;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.selectedIndicator {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  background: var(--provider-color);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* Provider-specific color variables */
+.providerCard[style*="--provider-color: #10a37f"] {
+  --provider-color: #10a37f;
+}
+
+.providerCard[style*="--provider-color: #6366f1"] {
+  --provider-color: #6366f1;
+}
+
+.providerCard[style*="--provider-color: #8b5cf6"] {
+  --provider-color: #8b5cf6;
+}
+
+.providerCard[style*="--provider-color: #f59e0b"] {
+  --provider-color: #f59e0b;
+}
+
+.providerCard[style*="--provider-color: #3b82f6"] {
+  --provider-color: #3b82f6;
+}
+
+.providerCard[style*="--provider-color: #6b7280"] {
+  --provider-color: #6b7280;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .providerGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .providerCard {
+    padding: 12px;
+  }
+  
+  .providerIcon {
+    font-size: 20px;
+    width: 36px;
+    height: 36px;
+    margin-right: 12px;
+  }
+  
+  .providerContent h4 {
+    font-size: 15px;
+  }
+  
+  .providerContent p {
+    font-size: 12px;
+  }
+} 

@@ -45,8 +45,8 @@ export default async function handler(req, res) {
       currentAltitude: result.current_altitude,
       newAltitude: result.new_altitude,
       readinessStatus: result.readiness_status,
-      treeSize: result.idea_tree.length,
-      newBranches: result.new_branches.length
+      treeSize: result.tree_size,
+      newBranches: result.new_branches_count
     });
 
     return res.status(200).json({

@@ -89,6 +89,24 @@ export default function Home() {
             >
               🔄 Original Ping-Pong
             </button>
+            <a
+              href="/template-builder"
+              style={{
+                padding: '12px 24px',
+                border: 'none',
+                borderRadius: '8px 8px 0 0',
+                background: '#28a745',
+                color: 'white',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                fontSize: '1rem',
+                textDecoration: 'none',
+                display: 'inline-block'
+              }}
+            >
+              🛠️ Template Builder
+            </a>
           </div>
         </div>
 

@@ -404,4 +404,56 @@
     color: #333;
     -webkit-text-fill-color: unset;
   }
+}
+
+/* Refinement action buttons */
+.refinementActions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.useSuggestionButton,
+.clearRefinementButton {
+  padding: 0.75rem 1.5rem;
+  border: 2px solid;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+}
+
+.useSuggestionButton {
+  background: #48bb78;
+  border-color: #48bb78;
+  color: white;
+}
+
+.useSuggestionButton:hover:not(:disabled) {
+  background: #38a169;
+  border-color: #38a169;
+  transform: translateY(-1px);
+}
+
+.clearRefinementButton {
+  background: white;
+  border-color: #e53e3e;
+  color: #e53e3e;
+}
+
+.clearRefinementButton:hover:not(:disabled) {
+  background: #e53e3e;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.useSuggestionButton:disabled,
+.clearRefinementButton:disabled {
+  background: #f7fafc;
+  border-color: #e2e8f0;
+  color: #a0aec0;
+  cursor: not-allowed;
+  transform: none;
 } 

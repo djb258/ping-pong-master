@@ -1,48 +1,97 @@
 import { callLLM } from '../../utils/llmProviders.js';
+import { withErrorHandling } from '../../utils/errorHandler.js';
+import { validateApiRequest, validateAltitude, validateChecklist } from '../../utils/validation.js';
+import { APP_CONFIG } from '../../utils/config.js';
 
-export default async function handler(req, res) {
+export default withErrorHandling(async (req, res) => {
+  // Validate request method
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  try {
-    const { altitude, checklist, userPrompt, ideaTree } = req.body;
-
-    if (!altitude || !checklist || !userPrompt) {
-      return res.status(400).json({ error: 'Missing required parameters' });
-    }
-
-    // Create evaluation prompt for LLM
-    const evaluationPrompt = createEvaluationPrompt(altitude, checklist, userPrompt, ideaTree);
-
-    // Call LLM for evaluation
-    const llmResponse = await callLLM(
-      'You are an expert altitude-based thinking assistant. Evaluate checklist items based on the user\'s prompt and provide JSON responses.',
-      evaluationPrompt,
-      { fallbackToMock: true }
-    );
-
-    // Parse LLM response
-    let evaluation = {};
-    try {
-      if (typeof llmResponse === 'string') {
-        evaluation = JSON.parse(llmResponse);
-      } else {
-        evaluation = llmResponse;
+    return res.status(405).json({ 
+      success: false,
+      error: {
+        message: 'Method not allowed',
+        code: 'METHOD_NOT_ALLOWED',
+        timestamp: new Date().toISOString()
       }
-    } catch (parseError) {
-      console.error('Failed to parse LLM response:', parseError);
-      // Fallback to basic evaluation
-      evaluation = createFallbackEvaluation(checklist);
-    }
-
-    res.status(200).json(evaluation);
-
-  } catch (error) {
-    console.error('Error in evaluate-checklist:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    });
   }
-}
+
+  // Validate required fields
+  const validation = validateApiRequest(req.body, ['altitude', 'checklist', 'userPrompt']);
+  if (!validation.valid) {
+    return res.status(400).json({ 
+      success: false,
+      error: {
+        message: 'Validation failed',
+        code: 'VALIDATION_ERROR',
+        details: validation.errors,
+        timestamp: new Date().toISOString()
+      }
+    });
+  }
+
+  const { altitude, checklist, userPrompt, ideaTree = [] } = req.body;
+
+  // Validate individual fields
+  const altitudeValidation = validateAltitude(altitude);
+  if (!altitudeValidation.valid) {
+    return res.status(400).json({ 
+      success: false,
+      error: {
+        message: 'Invalid altitude level',
+        code: 'INVALID_ALTITUDE',
+        details: altitudeValidation.errors,
+        timestamp: new Date().toISOString()
+      }
+    });
+  }
+
+  const checklistValidation = validateChecklist(checklist);
+  if (!checklistValidation.valid) {
+    return res.status(400).json({ 
+      success: false,
+      error: {
+        message: 'Invalid checklist format',
+        code: 'INVALID_CHECKLIST',
+        details: checklistValidation.errors,
+        timestamp: new Date().toISOString()
+      }
+    });
+  }
+
+  // Create evaluation prompt for LLM
+  const evaluationPrompt = createEvaluationPrompt(altitude, checklist, userPrompt, ideaTree);
+
+  // Call LLM for evaluation with timeout
+  const llmResponse = await callLLM(
+    'You are an expert altitude-based thinking assistant. Evaluate checklist items based on the user\'s prompt and provide JSON responses.',
+    evaluationPrompt,
+    { 
+      fallbackToMock: true,
+      timeout: APP_CONFIG.requestTimeout
+    }
+  );
+
+  // Parse LLM response
+  let evaluation = {};
+  try {
+    if (typeof llmResponse === 'string') {
+      evaluation = JSON.parse(llmResponse);
+    } else {
+      evaluation = llmResponse;
+    }
+  } catch (parseError) {
+    console.error('Failed to parse LLM response:', parseError);
+    // Fallback to basic evaluation
+    evaluation = createFallbackEvaluation(checklist);
+  }
+
+  res.status(200).json({
+    success: true,
+    evaluation,
+    timestamp: new Date().toISOString()
+  });
+});
 
 function createEvaluationPrompt(altitude, checklist, userPrompt, ideaTree) {
   const altitudeContext = {

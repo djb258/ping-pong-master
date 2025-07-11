@@ -9,19 +9,23 @@
  * and environment-based configuration.
  */
 
+import { withErrorHandling } from '../../utils/errorHandler.js';
+import { validateApiRequest, validatePrompt } from '../../utils/validation.js';
+import { APP_CONFIG, LLM_CONFIG } from '../../utils/config.js';
+import { refinePrompt } from '../../utils/refinePrompt';
+
 /**
  * Call Abacus API for prompt refinement
  */
 async function callActualAbacusAPI(prompt) {
   // Check if we have Abacus API credentials
-  const apiKey = process.env.ABACUS_API_KEY || 's2_ad901b7e536d47769353c72f146d994b';
-  const apiUrl = process.env.ABACUS_API_URL || 'https://api.abacus.ai/api/v0/chat';
+  const abacusConfig = LLM_CONFIG.abacus;
   
-  console.log(`[Abacus API] API Key present: ${!!apiKey}`);
-  console.log(`[Abacus API] API Key length: ${apiKey ? apiKey.length : 0}`);
-  console.log(`[Abacus API] API URL: ${apiUrl}`);
+  console.log(`[Abacus API] API Key present: ${!!abacusConfig.apiKey}`);
+  console.log(`[Abacus API] API Key length: ${abacusConfig.apiKey ? abacusConfig.apiKey.length : 0}`);
+  console.log(`[Abacus API] API URL: ${abacusConfig.apiUrl}`);
   
-  if (!apiKey || apiKey === 'your_abacus_api_key_here') {
+  if (!abacusConfig.apiKey || abacusConfig.apiKey === 'your_abacus_api_key_here') {
     console.log('[Abacus API] No valid API key found, using fallback');
     return generateClearerPrompt(prompt);
   }
@@ -54,48 +58,61 @@ Your task is to help the user improve their prompt for a large language model (L
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      llmName: process.env.ABACUS_MODEL || 'gpt-4o',
-      maxTokens: parseInt(process.env.ABACUS_MAX_TOKENS) || 1000,
-      temperature: parseFloat(process.env.ABACUS_TEMPERATURE) || 0.7,
+      llmName: abacusConfig.model,
+      maxTokens: abacusConfig.maxTokens,
+      temperature: abacusConfig.temperature,
     };
 
-    console.log('[Abacus API] Making request to:', apiUrl);
+    console.log('[Abacus API] Making request to:', abacusConfig.apiUrl);
     console.log('[Abacus API] Request body:', JSON.stringify(requestBody, null, 2));
 
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-    });
+    // Create timeout controller
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), APP_CONFIG.requestTimeout);
 
-    console.log(`[Abacus API] Response status: ${response.status}`);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`[Abacus API] Error response: ${errorText}`);
-      throw new Error(`Abacus API error: ${response.status} ${response.statusText} - ${errorText}`);
-    }
+    try {
+      const response = await fetch(abacusConfig.apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${abacusConfig.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
+      });
 
-    const data = await response.json();
-    console.log('[Abacus API] Response data:', JSON.stringify(data, null, 2));
-    
-    // Extract the refined prompt from the response
-    const refinedPrompt = data.response || 
-                         data.choices?.[0]?.message?.content || 
-                         data.refined_prompt || 
-                         data.result || 
-                         data.output ||
-                         data.text;
-    
-    if (!refinedPrompt) {
-      console.error('[Abacus API] No valid response content found');
-      throw new Error('No valid response content from Abacus API');
+      clearTimeout(timeoutId);
+
+      console.log(`[Abacus API] Response status: ${response.status}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[Abacus API] Error response: ${errorText}`);
+        throw new Error(`Abacus API error: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('[Abacus API] Response data:', JSON.stringify(data, null, 2));
+      
+      // Extract the refined prompt from the response
+      const refinedPrompt = data.response || 
+                           data.choices?.[0]?.message?.content || 
+                           data.refined_prompt || 
+                           data.result || 
+                           data.output ||
+                           data.text;
+      
+      if (!refinedPrompt) {
+        console.error('[Abacus API] No valid response content found');
+        throw new Error('No valid response content from Abacus API');
+      }
+      
+      return refinedPrompt.trim();
+      
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      throw fetchError;
     }
-    
-    return refinedPrompt.trim();
     
   } catch (error) {
     console.error('[Abacus API] Call failed:', error);
@@ -147,63 +164,63 @@ function generateClearerPrompt(originalPrompt) {
 }
 
 /**
- * Validate request payload
- */
-function validateRequest(body) {
-  if (!body || typeof body !== 'object') {
-    throw new Error('Invalid request body');
-  }
-  
-  if (!body.prompt || typeof body.prompt !== 'string') {
-    throw new Error('Missing or invalid prompt field');
-  }
-  
-  if (body.prompt.trim().length === 0) {
-    throw new Error('Prompt cannot be empty');
-  }
-  
-  if (body.prompt.length > 10000) {
-    throw new Error('Prompt too long (max 10,000 characters)');
-  }
-  
-  return body.prompt.trim();
-}
-
-/**
  * Main API handler
  */
-import { refinePrompt } from '../../utils/refinePrompt';
-
-export default async function handler(req, res) {
+export default withErrorHandling(async (req, res) => {
+  // Validate request method
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  try {
-    const { inputPrompt } = req.body;
-    
-    if (!inputPrompt) {
-      return res.status(400).json({ error: 'Input prompt is required' });
-    }
-
-    console.log('Received prompt:', inputPrompt);
-    
-    const refinedPrompt = await refinePrompt(inputPrompt);
-    
-    console.log('Refined prompt:', refinedPrompt);
-    
-    res.status(200).json({ 
-      success: true,
-      refinedPrompt: refinedPrompt 
-    });
-  } catch (error) {
-    console.error('Error in abacus API:', error);
-    res.status(500).json({ 
-      error: 'Internal server error',
-      details: error.message 
+    return res.status(405).json({ 
+      success: false,
+      error: {
+        message: 'Method not allowed',
+        code: 'METHOD_NOT_ALLOWED',
+        timestamp: new Date().toISOString()
+      }
     });
   }
-}
+
+  // Validate required fields
+  const validation = validateApiRequest(req.body, ['inputPrompt']);
+  if (!validation.valid) {
+    return res.status(400).json({ 
+      success: false,
+      error: {
+        message: 'Validation failed',
+        code: 'VALIDATION_ERROR',
+        details: validation.errors,
+        timestamp: new Date().toISOString()
+      }
+    });
+  }
+
+  const { inputPrompt } = req.body;
+
+  // Validate prompt
+  const promptValidation = validatePrompt(inputPrompt);
+  if (!promptValidation.valid) {
+    return res.status(400).json({ 
+      success: false,
+      error: {
+        message: 'Invalid prompt',
+        code: 'INVALID_PROMPT',
+        details: promptValidation.errors,
+        timestamp: new Date().toISOString()
+      }
+    });
+  }
+
+  console.log('Received prompt:', promptValidation.sanitized);
+  
+  const refinedPrompt = await refinePrompt(promptValidation.sanitized);
+  
+  console.log('Refined prompt:', refinedPrompt);
+  
+  res.status(200).json({ 
+    success: true,
+    refinedPrompt: refinedPrompt,
+    timestamp: new Date().toISOString()
+  });
+});
 
 /**
  * API configuration

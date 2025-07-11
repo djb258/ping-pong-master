@@ -1,42 +1,90 @@
 import { callLLM } from '../../utils/llmProviders.js';
+import { withErrorHandling } from '../../utils/errorHandler.js';
+import { validateApiRequest, validatePrompt, validateAltitude } from '../../utils/validation.js';
+import { APP_CONFIG } from '../../utils/config.js';
 
-export default async function handler(req, res) {
+export default withErrorHandling(async (req, res) => {
+  // Validate request method
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  try {
-    const { content, altitude } = req.body;
-
-    if (!content || !altitude) {
-      return res.status(400).json({ error: 'Missing required parameters' });
-    }
-
-    // Create summary prompt based on altitude
-    const summaryPrompt = createSummaryPrompt(content, altitude);
-
-    // Call LLM for summary generation
-    const llmResponse = await callLLM(
-      'You are an expert altitude-based thinking assistant. Generate concise summaries that capture the essence of user content at specific altitude levels.',
-      summaryPrompt,
-      { fallbackToMock: true }
-    );
-
-    // Clean and return the summary
-    const summary = cleanSummary(llmResponse, altitude);
-
-    res.status(200).json({ 
-      summary,
-      altitude,
-      content_length: content.length,
-      summary_length: summary.length
+    return res.status(405).json({ 
+      success: false,
+      error: {
+        message: 'Method not allowed',
+        code: 'METHOD_NOT_ALLOWED',
+        timestamp: new Date().toISOString()
+      }
     });
-
-  } catch (error) {
-    console.error('Error in generate-summary:', error);
-    res.status(500).json({ error: 'Internal server error' });
   }
-}
+
+  // Validate required fields
+  const validation = validateApiRequest(req.body, ['content', 'altitude']);
+  if (!validation.valid) {
+    return res.status(400).json({ 
+      success: false,
+      error: {
+        message: 'Validation failed',
+        code: 'VALIDATION_ERROR',
+        details: validation.errors,
+        timestamp: new Date().toISOString()
+      }
+    });
+  }
+
+  const { content, altitude } = req.body;
+
+  // Validate content
+  const contentValidation = validatePrompt(content);
+  if (!contentValidation.valid) {
+    return res.status(400).json({ 
+      success: false,
+      error: {
+        message: 'Invalid content',
+        code: 'INVALID_CONTENT',
+        details: contentValidation.errors,
+        timestamp: new Date().toISOString()
+      }
+    });
+  }
+
+  // Validate altitude
+  const altitudeValidation = validateAltitude(altitude);
+  if (!altitudeValidation.valid) {
+    return res.status(400).json({ 
+      success: false,
+      error: {
+        message: 'Invalid altitude level',
+        code: 'INVALID_ALTITUDE',
+        details: altitudeValidation.errors,
+        timestamp: new Date().toISOString()
+      }
+    });
+  }
+
+  // Create summary prompt based on altitude
+  const summaryPrompt = createSummaryPrompt(contentValidation.sanitized, altitudeValidation.sanitized);
+
+  // Call LLM for summary generation with timeout
+  const llmResponse = await callLLM(
+    'You are an expert altitude-based thinking assistant. Generate concise summaries that capture the essence of user content at specific altitude levels.',
+    summaryPrompt,
+    { 
+      fallbackToMock: true,
+      timeout: APP_CONFIG.requestTimeout
+    }
+  );
+
+  // Clean and return the summary
+  const summary = cleanSummary(llmResponse, altitudeValidation.sanitized);
+
+  res.status(200).json({ 
+    success: true,
+    summary,
+    altitude: altitudeValidation.sanitized,
+    content_length: contentValidation.sanitized.length,
+    summary_length: summary.length,
+    timestamp: new Date().toISOString()
+  });
+});
 
 function createSummaryPrompt(content, altitude) {
   const altitudeContext = {

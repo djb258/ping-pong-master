@@ -7,6 +7,9 @@ import { refinePromptWithAltitude, pruneTreeBranches, generateStructuredOutput }
 import { getTemplate, generateSystemPrompt, generateUserPrompt, generateConversationalQuestions } from '../../utils/altitudeTemplates';
 import { callLLM } from '../../utils/llmProviders';
 import { getRelevantQuestions, getLevelInfo, getNextAltitude, isReadyForNextLevel } from '../../utils/altitudeJourney';
+import { withErrorHandling } from '../../utils/errorHandler.js';
+import { validateApiRequest, validatePrompt } from '../../utils/validation.js';
+import { APP_CONFIG } from '../../utils/config.js';
 
 /**
  * Call LLM API for conversational refinement
@@ -22,7 +25,8 @@ async function callLLMForConversationalRefinement(prompt, altitude, context, ide
 
     // Use the unified LLM calling function (provider configured via env vars)
     const conversationalResponse = await callLLM(systemPrompt, userPrompt, {
-      fallbackToMock: true // Fallback to mock if provider fails
+      fallbackToMock: true, // Fallback to mock if provider fails
+      timeout: APP_CONFIG.requestTimeout
     });
 
     console.log('[LLM] Response received successfully');
@@ -154,129 +158,150 @@ async function getConversationalQuestions(altitude, prompt, context, templateNam
   return relevantQuestions.map(q => q.text);
 }
 
-export default async function handler(req, res) {
+export default withErrorHandling(async (req, res) => {
+  // Validate request method
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  try {
-    const { prompt, ideaTree = [], coreIdea = '', isDirectionChange = false, altitude, template, userResponses } = req.body;
-    
-    if (!prompt) {
-      return res.status(400).json({ error: 'Prompt is required' });
-    }
-
-    console.log('LLM altitude refinement request:', {
-      prompt,
-      ideaTreeLength: ideaTree.length,
-      coreIdea,
-      isDirectionChange,
-      altitude,
-      template
-    });
-
-    // If user is changing direction, prune the tree first
-    let currentTree = ideaTree;
-    if (isDirectionChange && ideaTree.length > 0) {
-      currentTree = pruneTreeBranches(ideaTree, prompt);
-      console.log('Pruned tree:', currentTree);
-    }
-
-    // Get current altitude if not provided
-    const currentAltitude = altitude || determineAltitude(prompt, currentTree);
-    
-    // Get conversational context
-    const context = currentTree.length > 0 ? 
-      `Exploring: ${currentTree.map(branch => branch.value).join(', ')}` : 
-      'Starting fresh exploration';
-
-    // Get template from request, environment variable, or use default
-    const templateName = template || process.env.DEFAULT_TEMPLATE || 'career';
-    
-    // Get conversational refinement from LLM API (provider configured via env vars)
-    const conversationalResponse = await callLLMForConversationalRefinement(
-      prompt, 
-      currentAltitude, 
-      context, 
-      currentTree,
-      templateName,
-      userResponses
-    );
-
-    // Parse the conversational response to extract refined prompt and questions
-    let refinedPrompt = prompt;
-    let conversationalQuestions = [];
-    
-    if (conversationalResponse) {
-      try {
-        // Try to parse as JSON first
-        let parsedResponse;
-        if (typeof conversationalResponse === 'string') {
-          parsedResponse = JSON.parse(conversationalResponse);
-        } else {
-          parsedResponse = conversationalResponse;
-        }
-        
-        if (parsedResponse.refined_prompt) {
-          refinedPrompt = parsedResponse.refined_prompt;
-        }
-        
-        if (parsedResponse.questions && Array.isArray(parsedResponse.questions)) {
-          conversationalQuestions = parsedResponse.questions;
-        }
-      } catch (parseError) {
-        console.log('[LLM] Failed to parse JSON response, using as-is:', parseError);
-        // If parsing fails, use the response as the refined prompt
-        refinedPrompt = conversationalResponse;
-        conversationalQuestions = await getConversationalQuestions(currentAltitude, prompt, context, templateName, userResponses);
+    return res.status(405).json({ 
+      success: false,
+      error: {
+        message: 'Method not allowed',
+        code: 'METHOD_NOT_ALLOWED',
+        timestamp: new Date().toISOString()
       }
-    } else {
-      // Fallback to generated questions
-      conversationalQuestions = await getConversationalQuestions(currentAltitude, prompt, context, templateName, userResponses);
-    }
-
-    // Perform standard altitude-based refinement for tree growth
-    const result = await refinePromptWithAltitude(refinedPrompt, currentTree);
-    
-    // Generate structured output
-    const structuredOutput = generateStructuredOutput(
-      result.idea_tree,
-      coreIdea || prompt,
-      result.readiness_status
-    );
-
-    console.log('LLM altitude refinement result:', {
-      currentAltitude: result.current_altitude,
-      newAltitude: result.new_altitude,
-      readinessStatus: result.readiness_status,
-      treeSize: result.tree_size,
-      newBranches: result.new_branches_count
-    });
-
-    return res.status(200).json({
-      success: true,
-      ...result,
-      refined_prompt: refinedPrompt, // Use the LLM-refined prompt
-      conversational_response: conversationalResponse,
-      conversational_questions: conversationalQuestions,
-      structured_output: structuredOutput,
-      source: 'Modular LLM Altitude Refiner'
-    });
-
-  } catch (error) {
-    console.error('LLM altitude refinement error:', error);
-    return res.status(500).json({
-      error: 'Internal server error',
-      message: error.message,
-      fallback: 'Unable to perform conversational refinement. Please try again.'
     });
   }
-}
 
-// Helper function to determine altitude (imported from altitudePromptRefiner)
+  // Validate required fields
+  const validation = validateApiRequest(req.body, ['prompt']);
+  if (!validation.valid) {
+    return res.status(400).json({ 
+      success: false,
+      error: {
+        message: 'Validation failed',
+        code: 'VALIDATION_ERROR',
+        details: validation.errors,
+        timestamp: new Date().toISOString()
+      }
+    });
+  }
+
+  const { prompt, ideaTree = [], coreIdea = '', isDirectionChange = false, altitude, template, userResponses } = req.body;
+
+  // Validate prompt
+  const promptValidation = validatePrompt(prompt);
+  if (!promptValidation.valid) {
+    return res.status(400).json({ 
+      success: false,
+      error: {
+        message: 'Invalid prompt',
+        code: 'INVALID_PROMPT',
+        details: promptValidation.errors,
+        timestamp: new Date().toISOString()
+      }
+    });
+  }
+
+  console.log('LLM altitude refinement request:', {
+    prompt: promptValidation.sanitized,
+    ideaTreeLength: ideaTree.length,
+    coreIdea,
+    isDirectionChange,
+    altitude,
+    template
+  });
+
+  // If user is changing direction, prune the tree first
+  let currentTree = ideaTree;
+  if (isDirectionChange && ideaTree.length > 0) {
+    currentTree = pruneTreeBranches(ideaTree, promptValidation.sanitized);
+    console.log('Pruned tree:', currentTree);
+  }
+
+  // Get current altitude if not provided
+  const currentAltitude = altitude || determineAltitude(promptValidation.sanitized, currentTree);
+  
+  // Get conversational context
+  const context = currentTree.length > 0 ? 
+    `Exploring: ${currentTree.map(branch => branch.value).join(', ')}` : 
+    'Starting fresh exploration';
+
+  // Get template from request, environment variable, or use default
+  const templateName = template || process.env.DEFAULT_TEMPLATE || 'career';
+  
+  // Get conversational refinement from LLM API (provider configured via env vars)
+  const conversationalResponse = await callLLMForConversationalRefinement(
+    promptValidation.sanitized, 
+    currentAltitude, 
+    context, 
+    currentTree, 
+    templateName, 
+    userResponses
+  );
+
+  // Parse the response
+  let parsedResponse = {};
+  try {
+    if (typeof conversationalResponse === 'string') {
+      parsedResponse = JSON.parse(conversationalResponse);
+    } else {
+      parsedResponse = conversationalResponse;
+    }
+  } catch (parseError) {
+    console.error('Failed to parse LLM response:', parseError);
+    parsedResponse = {
+      refined_prompt: conversationalResponse,
+      questions: []
+    };
+  }
+
+  // Get conversational questions
+  const questions = await getConversationalQuestions(
+    currentAltitude, 
+    promptValidation.sanitized, 
+    context, 
+    templateName, 
+    userResponses
+  );
+
+  // Determine readiness status
+  const readinessStatus = isReadyForNextLevel(currentAltitude, promptValidation.sanitized, currentTree);
+
+  console.log('LLM altitude refinement result:', {
+    currentAltitude,
+    readinessStatus,
+    hasRefinedPrompt: !!parsedResponse.refined_prompt,
+    questionsCount: questions.length
+  });
+
+  return res.status(200).json({
+    success: true,
+    conversational_response: parsedResponse.refined_prompt || conversationalResponse,
+    conversational_questions: parsedResponse.questions || questions,
+    altitude_context: context,
+    readiness_status: readinessStatus,
+    current_altitude: currentAltitude,
+    template: templateName,
+    timestamp: new Date().toISOString()
+  });
+});
+
+/**
+ * Determine altitude level based on prompt content and idea tree
+ */
 function determineAltitude(prompt, ideaTree) {
-  if (ideaTree.length === 0) return '30k';
-  if (ideaTree.length <= 2) return '20k';
-  if (ideaTree.length <= 5) return '10k';
-  return '5k';
+  // Simple altitude determination logic
+  const promptLower = prompt.toLowerCase();
+  
+  if (promptLower.includes('vision') || promptLower.includes('dream') || promptLower.includes('goal')) {
+    return '30k';
+  } else if (promptLower.includes('industry') || promptLower.includes('category') || promptLower.includes('business')) {
+    return '20k';
+  } else if (promptLower.includes('specialization') || promptLower.includes('niche') || promptLower.includes('specific')) {
+    return '10k';
+  } else if (promptLower.includes('action') || promptLower.includes('plan') || promptLower.includes('implement')) {
+    return '5k';
+  }
+  
+  // Default based on idea tree depth
+  return ideaTree.length === 0 ? '30k' : '20k';
 } 

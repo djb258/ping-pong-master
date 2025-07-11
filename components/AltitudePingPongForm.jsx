@@ -9,10 +9,11 @@ import React, { useState, useEffect } from 'react';
 import styles from '../styles/AltitudePingPongForm.module.css';
 import { useChecklistState } from '../utils/useChecklistState.js';
 import ChecklistGuardrail from './ChecklistGuardrail.jsx';
+import { withComponentErrorHandling } from '../utils/errorHandler.js';
 
 import { checkForDrift, validateAltitudeDependencies, generateAltitudeSummary } from '../utils/driftDetector.js';
 
-const AltitudePingPongForm = () => {
+const AltitudePingPongForm = withComponentErrorHandling(() => {
   const [blocks, setBlocks] = useState([]);
   const [currentBlockId, setCurrentBlockId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -865,6 +866,6 @@ const AltitudePingPongForm = () => {
       </div>
     </div>
   );
-};
+});
 
 export default AltitudePingPongForm; 

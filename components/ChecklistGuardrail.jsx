@@ -1,7 +1,8 @@
 import React from 'react';
 import styles from '../styles/ChecklistGuardrail.module.css';
+import { withComponentErrorHandling } from '../utils/errorHandler.js';
 
-const ChecklistGuardrail = ({ 
+const ChecklistGuardrail = withComponentErrorHandling(({ 
   checklist, 
   onToggleCheck, 
   promotionStatus, 
@@ -85,7 +86,7 @@ const ChecklistGuardrail = ({
       </div>
     </div>
   );
-};
+});
 
 const ChecklistItem = ({ item, onToggle }) => {
   const { id, label, description, llm_checked, llm_reason, user_checked, category } = item;

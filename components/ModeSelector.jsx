@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../styles/ModeSelector.module.css';
+import { withComponentErrorHandling } from '../utils/errorHandler.js';
 
-const ModeSelector = ({ selectedMode, onModeChange }) => {
+const ModeSelector = withComponentErrorHandling(({ selectedMode, onModeChange }) => {
   const [modeProfiles, setModeProfiles] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -103,6 +104,6 @@ const ModeSelector = ({ selectedMode, onModeChange }) => {
       </div>
     </div>
   );
-};
+});
 
 export default ModeSelector; 

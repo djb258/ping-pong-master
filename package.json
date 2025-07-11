@@ -4,10 +4,12 @@
   "description": "A Next.js application for prompt refinement with ping-pong interactions",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node auto-start-orbt.js && next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "orbt:load": "node auto-start-orbt.js",
+    "orbt:status": "node -e \"console.log('ORBT Status:'); const orbt = require('./utils/orbt_doctrine.js'); console.log('Operating System:', orbt.tiers[30000].label); console.log('Repair System:', orbt.tiers[20000].label); console.log('Build System:', orbt.tiers[10000].label); console.log('Training System:', orbt.tiers[5000].label);\""
   },
   "dependencies": {
     "next": "^14.2.30",

@@ -3,6 +3,10 @@
  * This handles the server-side API call where environment variables are available
  */
 
+import { withErrorHandling } from '../../utils/errorHandler.js';
+import { validateApiRequest, validatePrompt } from '../../utils/validation.js';
+import { APP_CONFIG, LLM_CONFIG } from '../../utils/config.js';
+
 const SYSTEM_PROMPT = `You are an Expert Prompt Refiner. Your job is to take user prompts and make them more effective and actionable for AI systems.
 
 When given a prompt, you should:
@@ -23,102 +27,127 @@ CRITICAL RULES:
 - Add context, constraints, and formatting that will help AI systems provide better responses
 - Focus on making prompts more effective for getting useful results`;
 
-export default async function handler(req, res) {
+export default withErrorHandling(async (req, res) => {
+  // Validate request method
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  try {
-    const { prompt } = req.body;
-    
-    if (!prompt) {
-      return res.status(400).json({ error: 'Prompt is required' });
-    }
-
-    console.log('Refining prompt:', prompt);
-    
-    // Try OpenAI first, then fallback to local logic
-    const openaiApiKey = process.env.OPENAI_API_KEY || process.env.GPT4_API_KEY;
-    
-    if (openaiApiKey) {
-      console.log('Using OpenAI API key:', openaiApiKey.substring(0, 10) + '...');
-
-      // OpenAI API request
-      const requestBody = {
-        model: 'gpt-3.5-turbo',
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: 1000,
-        temperature: 0.7
-      };
-
-      console.log('OpenAI request body:', JSON.stringify(requestBody, null, 2));
-
-      // Create timeout controller
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-
-      try {
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openaiApiKey}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(requestBody),
-          signal: controller.signal
-        });
-
-        clearTimeout(timeoutId);
-        
-        console.log('OpenAI response status:', response.status);
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log('OpenAI API Response:', data);
-
-          if (data.choices && data.choices[0] && data.choices[0].message) {
-            const content = data.choices[0].message.content;
-            return res.status(200).json({
-              success: true,
-              refined_prompt: content,
-              source: 'OpenAI',
-              model: 'gpt-3.5-turbo',
-              usage: data.usage
-            });
-          }
-        } else {
-          const errorText = await response.text();
-          console.error('OpenAI API Error:', errorText);
-        }
-
-      } catch (fetchError) {
-        clearTimeout(timeoutId);
-        console.error('OpenAI fetch error:', fetchError);
+    return res.status(405).json({ 
+      success: false,
+      error: {
+        message: 'Method not allowed',
+        code: 'METHOD_NOT_ALLOWED',
+        timestamp: new Date().toISOString()
       }
-    } else {
-      console.log('No OpenAI API key found, using fallback');
-    }
-
-    // If OpenAI fails or no API key, use fallback
-    console.log('Using fallback response generation');
-    return res.status(200).json({
-      success: true,
-      refined_prompt: generateFallbackResponse(prompt),
-      source: 'Fallback',
-      note: 'Add OPENAI_API_KEY to .env.local for AI-powered refinement'
-    });
-
-  } catch (error) {
-    console.error('Handler error:', error);
-    return res.status(500).json({
-      error: 'Internal server error',
-      message: error.message
     });
   }
-}
+
+  // Validate required fields
+  const validation = validateApiRequest(req.body, ['prompt']);
+  if (!validation.valid) {
+    return res.status(400).json({ 
+      success: false,
+      error: {
+        message: 'Validation failed',
+        code: 'VALIDATION_ERROR',
+        details: validation.errors,
+        timestamp: new Date().toISOString()
+      }
+    });
+  }
+
+  const { prompt } = req.body;
+
+  // Validate prompt
+  const promptValidation = validatePrompt(prompt);
+  if (!promptValidation.valid) {
+    return res.status(400).json({ 
+      success: false,
+      error: {
+        message: 'Invalid prompt',
+        code: 'INVALID_PROMPT',
+        details: promptValidation.errors,
+        timestamp: new Date().toISOString()
+      }
+    });
+  }
+
+  console.log('Refining prompt:', promptValidation.sanitized);
+  
+  // Try OpenAI first, then fallback to local logic
+  const openaiConfig = LLM_CONFIG.openai;
+  
+  if (openaiConfig.apiKey) {
+    console.log('Using OpenAI API key:', openaiConfig.apiKey.substring(0, 10) + '...');
+
+    // OpenAI API request
+    const requestBody = {
+      model: openaiConfig.model,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: promptValidation.sanitized }
+      ],
+      max_tokens: openaiConfig.maxTokens,
+      temperature: openaiConfig.temperature
+    };
+
+    console.log('OpenAI request body:', JSON.stringify(requestBody, null, 2));
+
+    // Create timeout controller
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), APP_CONFIG.requestTimeout);
+
+    try {
+      const response = await fetch(openaiConfig.apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openaiConfig.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+      
+      console.log('OpenAI response status:', response.status);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('OpenAI API Response:', data);
+
+        if (data.choices && data.choices[0] && data.choices[0].message) {
+          const content = data.choices[0].message.content;
+          return res.status(200).json({
+            success: true,
+            refined_prompt: content,
+            source: 'OpenAI',
+            model: openaiConfig.model,
+            usage: data.usage,
+            timestamp: new Date().toISOString()
+          });
+        }
+      } else {
+        const errorText = await response.text();
+        console.error('OpenAI API Error:', errorText);
+      }
+
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      console.error('OpenAI fetch error:', fetchError);
+    }
+  } else {
+    console.log('No OpenAI API key found, using fallback');
+  }
+
+  // If OpenAI fails or no API key, use fallback
+  console.log('Using fallback response generation');
+  return res.status(200).json({
+    success: true,
+    refined_prompt: generateFallbackResponse(promptValidation.sanitized),
+    source: 'Fallback',
+    note: 'Add OPENAI_API_KEY to .env.local for AI-powered refinement',
+    timestamp: new Date().toISOString()
+  });
+});
 
 /**
  * Generate a fallback response when API calls fail
